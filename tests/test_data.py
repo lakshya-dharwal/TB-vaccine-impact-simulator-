@@ -12,10 +12,9 @@ pytestmark = pytest.mark.skipif(
     reason="Processed dataset not built. Run download_data.py + process_data.py.",
 )
 
-EXPECTED_COLUMNS = {
-    "country", "iso3", "year", "bcg_coverage", "tb_incidence",
-    "hiv_prevalence", "population", "income_level", "region",
-}
+# Columns that are always present (covariate columns are optional/data-adaptive).
+CORE_COLUMNS = {"country", "iso3", "year", "tb_incidence", "population",
+                "income_level", "region"}
 
 
 @pytest.fixture(scope="module")
@@ -23,8 +22,8 @@ def df():
     return pd.read_csv(DATA_PATH)
 
 
-def test_has_expected_columns(df):
-    assert EXPECTED_COLUMNS.issubset(set(df.columns))
+def test_has_core_columns(df):
+    assert CORE_COLUMNS.issubset(set(df.columns))
 
 
 def test_year_range(df):
@@ -32,15 +31,20 @@ def test_year_range(df):
     assert df["year"].max() <= 2022
 
 
-def test_bcg_in_range(df):
-    assert df["bcg_coverage"].min() >= 0
-    assert df["bcg_coverage"].max() <= 100
-
-
 def test_tb_positive(df):
     assert (df["tb_incidence"] > 0).all()
 
 
-def test_no_nulls_in_core_columns(df):
-    assert df["bcg_coverage"].notna().all()
+def test_no_nulls_in_tb_target(df):
     assert df["tb_incidence"].notna().all()
+
+
+def test_income_level_valid(df):
+    assert set(df["income_level"].unique()).issubset({"L", "LM", "UM", "H"})
+
+
+def test_bcg_in_range_if_present(df):
+    if "bcg_coverage" in df.columns:
+        assert df["bcg_coverage"].min() >= 0
+        assert df["bcg_coverage"].max() <= 100
+        assert df["bcg_coverage"].notna().all()

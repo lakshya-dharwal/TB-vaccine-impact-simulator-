@@ -14,6 +14,8 @@ DARK = "#1F2937"
 FEATURE_LABELS = {
     "bcg_coverage": "BCG Vaccination Coverage",
     "hiv_prevalence": "HIV Burden",
+    "log_gdp": "Economic Resources (GDP)",
+    "health_expenditure": "Healthcare Investment",
     "year": "Time Trend",
 }
 

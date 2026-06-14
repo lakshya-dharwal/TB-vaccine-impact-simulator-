@@ -1,13 +1,14 @@
 """Plain-English narrative helpers for TB Futures.
 
-No ML jargon, no bare numbers without units. These produce human-readable
-explanations shown in the UI.
+No ML jargon, no bare numbers without units. Robust to whichever covariates the
+dataset happens to include (HIV, GDP, and income level are all optional).
 """
 
 SCENARIO_LABELS = {
     "baseline": "no change",
     "vaccine_push": "a vaccination push",
     "hiv_control": "stronger HIV control",
+    "health_boost": "more healthcare investment",
     "income_up": "broader economic development",
     "combined": "a combined prevention effort",
     "custom": "your custom adjustments",
@@ -21,6 +22,13 @@ INCOME_WORDS = {
 }
 
 
+def _num(value):
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return None
+
+
 def _burden_level(tb_incidence: float) -> str:
     if tb_incidence >= 150:
         return "high"
@@ -31,36 +39,39 @@ def _burden_level(tb_incidence: float) -> str:
 
 def generate_country_story(country: str, row) -> str:
     """Explain, in one short paragraph, why a country has its TB burden."""
-    bcg = float(row.get("bcg_coverage") or 0)
-    tb = float(row.get("tb_incidence") or 0)
-    hiv = float(row.get("hiv_prevalence") or 0)
+    bcg = _num(row.get("bcg_coverage"))
+    tb = _num(row.get("tb_incidence")) or 0.0
+    hiv = _num(row.get("hiv_prevalence"))
+    gdp = _num(row.get("gdp_per_capita"))
     income = row.get("income_level")
     region = row.get("region", "its region")
 
     high_tb = tb >= 150
     low_tb = tb < 40
-    low_income = income in ("L", "LM")
+    low_income = income in ("L", "LM") or (gdp is not None and gdp < 2000)
 
-    if hiv > 5 and high_tb:
+    if hiv is not None and hiv > 5 and high_tb:
+        bcg_txt = f"{bcg:.0f}% BCG coverage" if bcg is not None else "its vaccination programme"
         return (
-            f"Despite {bcg:.0f}% BCG coverage, {country} has a high TB burden largely "
-            f"because an HIV prevalence of {hiv:.1f}% significantly increases the risk "
-            f"that latent TB becomes active disease."
+            f"Despite {bcg_txt}, {country} has a high TB burden largely because an HIV "
+            f"prevalence of {hiv:.1f}% significantly increases the risk that latent TB "
+            f"becomes active disease."
         )
     if low_income and high_tb:
+        descriptor = INCOME_WORDS.get(income, "lower-income")
         return (
-            f"As a {INCOME_WORDS.get(income, 'lower-income')} country, {country}'s high "
-            f"TB burden reflects the compounding effects of limited economic resources "
-            f"and healthcare access, where delayed diagnosis and incomplete treatment "
-            f"allow transmission to persist."
+            f"As a {descriptor} country, {country}'s high TB burden reflects the "
+            f"compounding effects of limited economic resources and healthcare access, "
+            f"where delayed diagnosis and incomplete treatment allow transmission to "
+            f"persist."
         )
-    if bcg >= 90 and low_tb:
+    if bcg is not None and bcg >= 90 and low_tb:
         return (
             f"{country} demonstrates how strong vaccination infrastructure combined with "
             f"a stronger economy and lower HIV burden can suppress TB incidence even in "
             f"{region}."
         )
-    if bcg < 60 and low_tb:
+    if bcg is not None and bcg < 60 and low_tb:
         return (
             f"{country} has low BCG coverage, but TB incidence remains low due to strong "
             f"healthcare access, lower transmission risk, and robust detection and "

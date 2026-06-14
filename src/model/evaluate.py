@@ -26,8 +26,10 @@ def _metrics(y_true, y_pred):
 
 def main():
     df = pd.read_csv(DATA_PATH)
+    with open(os.path.join(MODELS_DIR, "schema.json")) as f:
+        schema = json.load(f)
     test_df = df[df["year"] > TRAIN_END].copy()
-    X_test = build_feature_matrix(test_df)
+    X_test = build_feature_matrix(test_df, schema)
     y_test = test_df[TARGET].values
 
     rf = joblib.load(os.path.join(MODELS_DIR, "rf_model.pkl"))
