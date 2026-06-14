@@ -137,6 +137,32 @@ pytest tests/ -v
 If the data download fails (for example, behind a network egress allowlist), the script
 prints the exact URLs to download manually into `data/raw/`.
 
+A `Makefile` wraps the common tasks: `make install`, `make pipeline` (data + train +
+evaluate), `make test`, `make api`, `make ui`, `make docker-up`.
+
+---
+
+## Run with Docker
+
+The image builds the dataset and trains the model at build time, so the container starts
+ready to serve. Run the full stack (API + UI) locally with one command:
+
+```bash
+docker compose up --build
+# UI  -> http://localhost:8501
+# API -> http://localhost:8000
+```
+
+## Deploy to Render
+
+`render.yaml` is a Render Blueprint that deploys two Docker web services — the API and
+the Streamlit UI. Push to GitHub, create a new Blueprint on Render pointing at this repo,
+and it provisions both. The UI's `TB_API_BASE` is wired to the API service automatically
+(the app prepends `https://` when the host has no scheme).
+
+Continuous integration runs on GitHub Actions (`.github/workflows/ci.yml`): it builds the
+dataset, trains the model, runs the test suite, and builds the Docker image on every push.
+
 ---
 
 ## API Reference

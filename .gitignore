@@ -1,8 +1,15 @@
-data/raw/
+# Generated data & model artifacts (raw inputs ARE tracked for reproducible builds)
 data/processed/
-__pycache__/
-*.pkl
-*.pyc
+models/*.pkl
 models/*.json
+
+# Python
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
+venv/
+
+# Misc
 .env
 .DS_Store

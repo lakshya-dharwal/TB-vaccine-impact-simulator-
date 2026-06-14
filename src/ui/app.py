@@ -18,6 +18,9 @@ from src.ui.charts import (
 )
 
 API_BASE = os.environ.get("TB_API_BASE", "http://localhost:8000")
+# Render's fromService host has no scheme; default to https when one is missing.
+if not API_BASE.startswith(("http://", "https://")):
+    API_BASE = "https://" + API_BASE
 
 st.set_page_config(page_title="TB Futures", page_icon="🫁", layout="wide")
 

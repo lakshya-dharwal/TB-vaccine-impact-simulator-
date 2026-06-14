@@ -1,0 +1,27 @@
+# Render Blueprint — deploys the API and the Streamlit UI as two Docker web
+# services. Push this repo to GitHub and create a new Blueprint on Render.
+services:
+  - type: web
+    name: tb-futures-api
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    dockerCommand: uvicorn src.api.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    plan: free
+    autoDeploy: true
+
+  - type: web
+    name: tb-futures-ui
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    dockerCommand: streamlit run src/ui/app.py --server.address 0.0.0.0 --server.port $PORT --server.headless true --browser.gatherUsageStats false
+    plan: free
+    autoDeploy: true
+    envVars:
+      # TB_API_BASE is set to the API service host; app.py prepends https:// if
+      # the value has no scheme.
+      - key: TB_API_BASE
+        fromService:
+          type: web
+          name: tb-futures-api
+          property: host

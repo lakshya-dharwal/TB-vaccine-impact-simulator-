@@ -1,0 +1,27 @@
+# Local one-command run: `docker compose up --build`
+# UI -> http://localhost:8501   API -> http://localhost:8000
+services:
+  api:
+    build: .
+    image: tb-futures
+    command: uvicorn src.api.main:app --host 0.0.0.0 --port 8000
+    ports:
+      - "8000:8000"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://localhost:8000/health').status==200 else 1)"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 10s
+
+  ui:
+    build: .
+    image: tb-futures
+    command: streamlit run src/ui/app.py --server.address 0.0.0.0 --server.port 8501 --server.headless true --browser.gatherUsageStats false
+    environment:
+      - TB_API_BASE=http://api:8000
+    ports:
+      - "8501:8501"
+    depends_on:
+      api:
+        condition: service_healthy
