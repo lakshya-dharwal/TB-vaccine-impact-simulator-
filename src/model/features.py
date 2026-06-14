@@ -1,31 +1,33 @@
 """Shared feature engineering for training and inference.
 
-Keeping this in one place guarantees the model is trained and queried with an
-identical column layout.
+Features after the WHO-data refactor:
+  bcg_coverage, hiv_prevalence, year,
+  income_level one-hot (L / LM / UM / H),
+  WHO region one-hot (AFR / AMR / EMR / EUR / SEA / WPR).
+
+GDP per capita and health expenditure have been removed in favour of the WHO
+`income_level` band.
 """
 
 import numpy as np
 import pandas as pd
 
-# Fixed region order so one-hot columns are stable across train and inference.
-REGIONS = ["AFR", "AMR", "EMR", "EUR", "SEAR", "WPR"]
+# Fixed orders so one-hot columns are stable across train and inference.
+INCOME_LEVELS = ["L", "LM", "UM", "H"]
+REGIONS = ["AFR", "AMR", "EMR", "EUR", "SEA", "WPR"]
 
-NUMERIC_FEATURES = [
-    "bcg_coverage",
-    "log_gdp",
-    "health_expenditure",
-    "hiv_prevalence",
-    "year",
-]
+# Ordered income ladder for the "income up" scenario.
+INCOME_LADDER = ["L", "LM", "UM", "H"]
 
-FEATURE_COLUMNS = NUMERIC_FEATURES + [f"region_{r}" for r in REGIONS]
+NUMERIC_FEATURES = ["bcg_coverage", "hiv_prevalence", "year"]
 
-# Sensible fallbacks when a country/year is missing a covariate.
-DEFAULTS = {
-    "gdp_per_capita": 5000.0,
-    "health_expenditure": 6.0,
-    "hiv_prevalence": 0.5,
-}
+FEATURE_COLUMNS = (
+    NUMERIC_FEATURES
+    + [f"income_{lvl}" for lvl in INCOME_LEVELS]
+    + [f"region_{r}" for r in REGIONS]
+)
+
+DEFAULTS = {"hiv_prevalence": 0.5}
 
 
 def _safe(value, key):
@@ -39,22 +41,26 @@ def _safe(value, key):
     return float(value)
 
 
+def income_up(level: str) -> str:
+    """Bump an income band up one tier (L->LM->UM->H); H stays H."""
+    if level in INCOME_LADDER:
+        idx = INCOME_LADDER.index(level)
+        return INCOME_LADDER[min(idx + 1, len(INCOME_LADDER) - 1)]
+    return level
+
+
 def build_feature_vector(row) -> dict:
     """Turn a country-year record (dict or pandas Series) into model features."""
-    bcg = _safe(row.get("bcg_coverage"), "bcg_coverage")
-    gdp = _safe(row.get("gdp_per_capita"), "gdp_per_capita")
-    health = _safe(row.get("health_expenditure"), "health_expenditure")
-    hiv = _safe(row.get("hiv_prevalence"), "hiv_prevalence")
-    year = _safe(row.get("year"), "year")
-    region = row.get("region", "OTHER")
-
     features = {
-        "bcg_coverage": bcg,
-        "log_gdp": float(np.log(max(gdp, 1.0))),
-        "health_expenditure": health,
-        "hiv_prevalence": hiv,
-        "year": year,
+        "bcg_coverage": _safe(row.get("bcg_coverage"), "bcg_coverage"),
+        "hiv_prevalence": _safe(row.get("hiv_prevalence"), "hiv_prevalence"),
+        "year": _safe(row.get("year"), "year"),
     }
+    income = row.get("income_level")
+    for lvl in INCOME_LEVELS:
+        features[f"income_{lvl}"] = 1.0 if income == lvl else 0.0
+
+    region = row.get("region")
     for r in REGIONS:
         features[f"region_{r}"] = 1.0 if region == r else 0.0
     return features

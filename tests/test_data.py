@@ -14,7 +14,7 @@ pytestmark = pytest.mark.skipif(
 
 EXPECTED_COLUMNS = {
     "country", "iso3", "year", "bcg_coverage", "tb_incidence",
-    "gdp_per_capita", "health_expenditure", "hiv_prevalence", "population", "region",
+    "hiv_prevalence", "population", "income_level", "region",
 }
 
 

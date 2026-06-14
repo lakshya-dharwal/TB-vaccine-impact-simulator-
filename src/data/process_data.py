@@ -1,102 +1,97 @@
-"""Clean, merge, and feature-engineer the raw TB Futures datasets.
+"""Build the analysis-ready TB Futures dataset from three source files.
 
-Reads the six raw OWID CSVs from data/raw/, harmonises them onto
-(country, iso3, year), attaches a WHO region, and writes a single
-analysis-ready table to data/processed/merged_tb_dataset.csv.
+Sources (all in data/raw/):
+  who_tb_data_merged.csv  WHO TB notifications — provides c_newinc,
+                          population_size, income_level, g_whoregion. We derive
+                          tb_incidence = c_newinc / population_size * 100,000.
+  bcg_coverage.csv        OWID BCG immunization coverage (Entity, Code, Year, value).
+  hiv_prevalence.csv      OWID share of population with HIV (Entity, Code, Year, value).
+
+Merge is on (iso3, year). Output: data/processed/merged_tb_dataset.csv with columns
+country, iso3, year, bcg_coverage, tb_incidence, hiv_prevalence, population,
+income_level, region.
 """
 
 import os
 
 import pandas as pd
 
-from src.data.who_regions import get_region
-
 RAW_DIR = "data/raw"
 PROCESSED_DIR = "data/processed"
 OUTPUT_PATH = os.path.join(PROCESSED_DIR, "merged_tb_dataset.csv")
 
-# raw filename -> canonical metric column name
-DATASETS = {
-    "bcg_coverage.csv": "bcg_coverage",
-    "tb_incidence.csv": "tb_incidence",
-    "hiv_prevalence.csv": "hiv_prevalence",
-    "gdp_per_capita.csv": "gdp_per_capita",
-    "health_expenditure.csv": "health_expenditure",
-    "population.csv": "population",
-}
+WHO_FILE = "who_tb_data_merged.csv"
+BCG_FILE = "bcg_coverage.csv"
+HIV_FILE = "hiv_prevalence.csv"
 
-KEY_COLS = ["country", "iso3", "year"]
-# columns that must be present for a row to be usable
-REQUIRED_NON_NULL = ["bcg_coverage", "tb_incidence"]
 YEAR_MIN, YEAR_MAX = 2000, 2022
+VALID_INCOME = {"L", "LM", "UM", "H"}
 
 
-def load_one(filename: str, metric: str) -> pd.DataFrame:
-    """Load a single OWID grapher CSV and standardise its columns.
-
-    OWID grapher CSVs come as: Entity, Code, Year, <value column>. We map the
-    first three to country/iso3/year and the first remaining numeric column to
-    the metric name.
-    """
+def load_owid(filename: str, metric: str) -> pd.DataFrame:
+    """Load an OWID grapher CSV (Entity, Code, Year, <value>) -> iso3/year/metric."""
     path = os.path.join(RAW_DIR, filename)
     if not os.path.exists(path):
         raise FileNotFoundError(
-            f"Missing {path}. Run `python src/data/download_data.py` first."
+            f"Missing {path}. Download it from OWID and place it in data/raw/."
         )
-
     df = pd.read_csv(path)
-
     rename = {}
     for col in df.columns:
         low = col.lower()
-        if low == "entity":
-            rename[col] = "country"
-        elif low == "code":
+        if low == "code":
             rename[col] = "iso3"
         elif low == "year":
             rename[col] = "year"
     df = df.rename(columns=rename)
-
-    value_cols = [c for c in df.columns if c not in ("country", "iso3", "year")]
+    value_cols = [c for c in df.columns if c not in ("Entity", "iso3", "year")]
     if not value_cols:
         raise ValueError(f"No value column found in {filename}")
-    # First non-key column holds the metric of interest.
     df = df.rename(columns={value_cols[0]: metric})
+    return df[["iso3", "year", metric]]
 
-    keep = ["country", "iso3", "year", metric]
-    df = df[[c for c in keep if c in df.columns]]
+
+def load_who() -> pd.DataFrame:
+    """Load the WHO notifications file and derive the modelling columns."""
+    path = os.path.join(RAW_DIR, WHO_FILE)
+    if not os.path.exists(path):
+        raise FileNotFoundError(
+            f"Missing {path}. Pull it from the repo into data/raw/."
+        )
+    df = pd.read_csv(path, low_memory=False)
+    df = df[["country", "iso3", "year", "g_whoregion", "c_newinc",
+             "population_size", "income_level"]].copy()
+
+    df["tb_incidence"] = df["c_newinc"] / df["population_size"] * 100000.0
+    df = df.rename(columns={"g_whoregion": "region", "population_size": "population"})
+    df = df.drop(columns=["c_newinc"])
     return df
 
 
 def main():
     os.makedirs(PROCESSED_DIR, exist_ok=True)
 
-    merged = None
-    for filename, metric in DATASETS.items():
-        df = load_one(filename, metric)
-        if merged is None:
-            merged = df
-        else:
-            merged = merged.merge(df, on=KEY_COLS, how="outer")
+    who = load_who()
+    bcg = load_owid(BCG_FILE, "bcg_coverage")
+    hiv = load_owid(HIV_FILE, "hiv_prevalence")
 
-    # Drop aggregates / rows without an ISO3 code (regions, "World", etc.).
+    merged = who.merge(bcg, on=["iso3", "year"], how="outer")
+    merged = merged.merge(hiv, on=["iso3", "year"], how="outer")
+
+    # Keep real countries within the modelling window.
     merged = merged.dropna(subset=["iso3"])
-    merged = merged[merged["iso3"].str.len() == 3]
-
-    # Restrict to the modelling window.
+    merged = merged[merged["iso3"].astype(str).str.len() == 3]
     merged = merged[(merged["year"] >= YEAR_MIN) & (merged["year"] <= YEAR_MAX)]
 
     # Require the core modelling columns.
-    merged = merged.dropna(subset=REQUIRED_NON_NULL)
-
-    # Attach WHO region.
-    merged["region"] = merged["iso3"].apply(get_region)
-    merged = merged[merged["region"] != "OTHER"]
+    merged = merged.dropna(subset=["bcg_coverage", "tb_incidence", "income_level"])
+    merged = merged[merged["income_level"].isin(VALID_INCOME)]
+    merged = merged[merged["tb_incidence"] > 0]
 
     final_cols = [
         "country", "iso3", "year",
-        "bcg_coverage", "tb_incidence", "gdp_per_capita",
-        "health_expenditure", "hiv_prevalence", "population", "region",
+        "bcg_coverage", "tb_incidence", "hiv_prevalence",
+        "population", "income_level", "region",
     ]
     for col in final_cols:
         if col not in merged.columns:
@@ -105,14 +100,14 @@ def main():
 
     merged.to_csv(OUTPUT_PATH, index=False)
 
-    # Summary.
     print("=" * 60)
     print("Processed dataset summary")
     print("=" * 60)
-    print(f"Rows:        {len(merged)}")
-    print(f"Countries:   {merged['country'].nunique()}")
-    print(f"Year range:  {int(merged['year'].min())}-{int(merged['year'].max())}")
-    print(f"Regions:     {sorted(merged['region'].unique())}")
+    print(f"Rows:         {len(merged)}")
+    print(f"Countries:    {merged['country'].nunique()}")
+    print(f"Year range:   {int(merged['year'].min())}-{int(merged['year'].max())}")
+    print(f"Regions:      {sorted(merged['region'].dropna().unique())}")
+    print(f"Income bands: {sorted(merged['income_level'].dropna().unique())}")
     print("\nMissing values per column:")
     print(merged.isna().sum().to_string())
     print(f"\nSaved to {OUTPUT_PATH}")

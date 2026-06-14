@@ -35,18 +35,19 @@ the estimated change in TB burden — with a model-uncertainty interval and a cl
 | **Baseline** | No changes |
 | **Vaccine Push** | BCG coverage +30 percentage points (capped at 99%) |
 | **HIV Control** | HIV prevalence × 0.75 |
-| **Health System Boost** | Health expenditure × 1.25 |
+| **Income Level Up** | Bump income band up one tier (L → LM → UM → H) |
 | **Combined** | All three of the above together |
-| **Custom** | Override BCG, HIV, health spend, and GDP with individual sliders |
+| **Custom** | Override BCG, HIV, and income level individually |
 
 ---
 
 ## The ML Model
 
 - **Type:** Random Forest Regressor (with a Linear Regression baseline for comparison)
-- **Features:** BCG coverage, log(GDP per capita), health expenditure, HIV prevalence,
-  year, one-hot WHO region
-- **Target:** TB incidence per 100,000 population
+- **Features:** BCG coverage, HIV prevalence, year, one-hot income level (L/LM/UM/H),
+  one-hot WHO region
+- **Target:** TB incidence per 100,000 population, derived as
+  `c_newinc / population_size × 100,000` from the WHO notifications file
 - **Split:** Temporal — train 2000–2017, test 2018–2022 (held out)
 - **Uncertainty:** Bootstrap over the forest's trees (exactly 100 resamples), reporting
   the 2.5th–97.5th percentile as a 95% model-uncertainty interval
@@ -72,9 +73,8 @@ TB-Futures/
 │
 ├── src/
 │   ├── data/
-│   │   ├── download_data.py        ← downloads the 6 source datasets
-│   │   ├── process_data.py         ← cleans, merges, adds WHO region
-│   │   └── who_regions.py          ← ISO3 → WHO region mapping
+│   │   ├── download_data.py        ← downloads BCG + HIV from OWID
+│   │   └── process_data.py         ← merges WHO + BCG + HIV, derives TB incidence
 │   ├── model/
 │   │   ├── features.py             ← shared feature engineering
 │   │   ├── train.py                ← trains RF + LR, saves artifacts
@@ -108,10 +108,11 @@ TB-Futures/
 # 1. Install dependencies
 pip install -r requirements.txt
 
-# 2. Download real data (writes to data/raw/)
+# 2. Download BCG + HIV from OWID into data/raw/
+#    (who_tb_data_merged.csv must already be in data/raw/)
 python src/data/download_data.py
 
-# 3. Process and merge data (writes data/processed/merged_tb_dataset.csv)
+# 3. Process and merge the 3 sources -> data/processed/merged_tb_dataset.csv
 python src/data/process_data.py
 
 # 4. Train the models (writes models/*.pkl + metadata)
@@ -153,17 +154,18 @@ prints the exact URLs to download manually into `data/raw/`.
 { "country": "Nigeria", "scenario": "combined" }
 ```
 
-Optional overrides: `bcg_override`, `hiv_override`, `health_override`, `gdp_override`
-(used with `"scenario": "custom"`).
+Optional overrides: `bcg_override`, `hiv_override`, `income_override` (L/LM/UM/H),
+used with `"scenario": "custom"`.
 
 ---
 
 ## Data Sources
 
+- WHO Global Tuberculosis Programme — notifications (`c_newinc`), `population_size`,
+  `income_level`, and WHO region (`who_tb_data_merged.csv`)
 - WHO / UNICEF WUENIC Immunization Coverage Estimates (BCG)
-- WHO Global Tuberculosis Programme (TB incidence)
-- Our World in Data — TB, HIV, GDP per capita, health expenditure, population
-- World Bank Development Indicators / UNAIDS
+- Our World in Data — BCG coverage and HIV prevalence
+- World Bank income classification / UNAIDS
 
 All data is publicly available and free to access.
 

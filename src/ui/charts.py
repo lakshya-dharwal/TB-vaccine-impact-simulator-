@@ -14,8 +14,6 @@ DARK = "#1F2937"
 FEATURE_LABELS = {
     "bcg_coverage": "BCG Vaccination Coverage",
     "hiv_prevalence": "HIV Burden",
-    "log_gdp": "Economic Resources (GDP)",
-    "health_expenditure": "Healthcare Investment",
     "year": "Time Trend",
 }
 
@@ -121,6 +119,8 @@ def importance_figure(importance: dict):
     for key, val in importance.items():
         if key.startswith("region_"):
             grouped["Geographic Region"] = grouped.get("Geographic Region", 0) + val
+        elif key.startswith("income_"):
+            grouped["Income Level"] = grouped.get("Income Level", 0) + val
         else:
             grouped[FEATURE_LABELS.get(key, key)] = val
     items = sorted(grouped.items(), key=lambda x: x[1])

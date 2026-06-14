@@ -13,7 +13,7 @@ pytestmark = pytest.mark.skipif(
     reason="Model/data artifacts not built. Run the data + train pipeline first.",
 )
 
-SCENARIOS = ["baseline", "vaccine_push", "hiv_control", "health_boost", "combined"]
+SCENARIOS = ["baseline", "vaccine_push", "hiv_control", "income_up", "combined"]
 
 
 @pytest.fixture(scope="module")

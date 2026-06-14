@@ -6,7 +6,7 @@ from src.model.country_story import (
     generate_country_story,
     generate_scenario_explanation,
 )
-from src.model.features import build_feature_vector, vector_to_frame
+from src.model.features import build_feature_vector, income_up, vector_to_frame
 
 DISCLAIMER = (
     "Predictions are model estimates based on historical population-level data. "
@@ -14,7 +14,7 @@ DISCLAIMER = (
 )
 
 N_BOOTSTRAP = 100  # exactly 100 bootstrap iterations
-SCENARIOS = ["baseline", "vaccine_push", "hiv_control", "health_boost", "combined"]
+SCENARIOS = ["baseline", "vaccine_push", "hiv_control", "income_up", "combined"]
 
 
 def get_country_row(df, country: str):
@@ -33,8 +33,8 @@ def _apply_scenario(values: dict, scenario: str) -> dict:
         v["bcg_coverage"] = min((v.get("bcg_coverage") or 0) + 30, 99)
     if scenario in ("hiv_control", "combined"):
         v["hiv_prevalence"] = (v.get("hiv_prevalence") or 0) * 0.75
-    if scenario in ("health_boost", "combined"):
-        v["health_expenditure"] = (v.get("health_expenditure") or 0) * 1.25
+    if scenario in ("income_up", "combined"):
+        v["income_level"] = income_up(v.get("income_level"))
     return v
 
 
@@ -68,28 +68,28 @@ def simulate(country, scenario, custom_overrides, df, model, feature_columns=Non
 
     current_bcg = float(row.get("bcg_coverage") or 0)
     current_hiv = float(row.get("hiv_prevalence") or 0)
-    current_health = float(row.get("health_expenditure") or 0)
-    current_gdp = float(row.get("gdp_per_capita") or 0)
+    current_income = row.get("income_level")
     current_tb = float(row.get("tb_incidence") or 0)
     population = float(row.get("population") or 0)
 
     base_values = {
         "bcg_coverage": current_bcg,
         "hiv_prevalence": current_hiv,
-        "health_expenditure": current_health,
-        "gdp_per_capita": current_gdp,
+        "income_level": current_income,
         "year": row.get("year"),
         "region": row.get("region"),
     }
 
     modified = _apply_scenario(base_values, scenario)
 
-    # Individual slider overrides take precedence over the scenario.
+    # Individual slider/selector overrides take precedence over the scenario.
     if custom_overrides:
-        for key in ("bcg_coverage", "hiv_prevalence", "health_expenditure", "gdp_per_capita"):
-            val = custom_overrides.get(key)
-            if val is not None:
-                modified[key] = float(val)
+        if custom_overrides.get("bcg_coverage") is not None:
+            modified["bcg_coverage"] = float(custom_overrides["bcg_coverage"])
+        if custom_overrides.get("hiv_prevalence") is not None:
+            modified["hiv_prevalence"] = float(custom_overrides["hiv_prevalence"])
+        if custom_overrides.get("income_level") is not None:
+            modified["income_level"] = custom_overrides["income_level"]
 
     features = build_feature_vector(modified)
     frame = vector_to_frame(features)
@@ -115,8 +115,8 @@ def simulate(country, scenario, custom_overrides, df, model, feature_columns=Non
         "simulated_bcg_coverage": round(float(modified["bcg_coverage"]), 1),
         "current_hiv_prevalence": round(current_hiv, 2),
         "simulated_hiv_prevalence": round(float(modified["hiv_prevalence"]), 2),
-        "current_health_expenditure": round(current_health, 2),
-        "simulated_health_expenditure": round(float(modified["health_expenditure"]), 2),
+        "current_income_level": current_income,
+        "simulated_income_level": modified["income_level"],
         "current_tb_incidence": round(current_tb, 1),
         "predicted_tb_incidence": round(predicted, 1),
         "absolute_reduction": round(absolute_reduction, 1),

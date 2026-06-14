@@ -75,11 +75,10 @@ def _latest_row(country: str):
 
 class SimulationRequest(BaseModel):
     country: str
-    scenario: str  # baseline, vaccine_push, hiv_control, health_boost, combined, custom
+    scenario: str  # baseline, vaccine_push, hiv_control, income_up, combined, custom
     bcg_override: float | None = None
     hiv_override: float | None = None
-    health_override: float | None = None
-    gdp_override: float | None = None
+    income_override: str | None = None  # L, LM, UM, H
 
 
 class SimulationResponse(BaseModel):
@@ -89,8 +88,8 @@ class SimulationResponse(BaseModel):
     simulated_bcg_coverage: float
     current_hiv_prevalence: float
     simulated_hiv_prevalence: float
-    current_health_expenditure: float
-    simulated_health_expenditure: float
+    current_income_level: str | None
+    simulated_income_level: str | None
     current_tb_incidence: float
     predicted_tb_incidence: float
     absolute_reduction: float
@@ -125,8 +124,7 @@ def country(country_name: str):
         "bcg_coverage": _num(row.get("bcg_coverage")),
         "tb_incidence": _num(row.get("tb_incidence")),
         "hiv_prevalence": _num(row.get("hiv_prevalence")),
-        "gdp_per_capita": _num(row.get("gdp_per_capita")),
-        "health_expenditure": _num(row.get("health_expenditure")),
+        "income_level": row.get("income_level"),
         "population": _num(row.get("population")),
         "region": row.get("region"),
         "country_story": generate_country_story(country_name, row.to_dict()),
@@ -139,15 +137,14 @@ def run_simulation(req: SimulationRequest):
     # Validate country up front so unknown countries return 422.
     _latest_row(req.country)
 
-    valid = {"baseline", "vaccine_push", "hiv_control", "health_boost", "combined", "custom"}
+    valid = {"baseline", "vaccine_push", "hiv_control", "income_up", "combined", "custom"}
     if req.scenario not in valid:
         raise HTTPException(status_code=422, detail=f"Unknown scenario: {req.scenario}")
 
     overrides = {
         "bcg_coverage": req.bcg_override,
         "hiv_prevalence": req.hiv_override,
-        "health_expenditure": req.health_override,
-        "gdp_per_capita": req.gdp_override,
+        "income_level": req.income_override,
     }
     overrides = {k: v for k, v in overrides.items() if v is not None}
 

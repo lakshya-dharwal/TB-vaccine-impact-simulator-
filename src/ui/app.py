@@ -9,10 +9,17 @@ import httpx
 import streamlit as st
 
 from src.ui.charts import (
-    _pct, _usd, _val,
+    _pct, _val,
     before_after_figure, ci_figure, gauge_figure,
     importance_figure, model_compare_figure, world_map,
 )
+
+INCOME_LABELS = {
+    "L": "Low income",
+    "LM": "Lower-middle income",
+    "UM": "Upper-middle income",
+    "H": "High income",
+}
 
 API_BASE = os.environ.get("TB_API_BASE", "http://localhost:8000")
 
@@ -139,7 +146,7 @@ SCENARIOS = [
     ("baseline", "Baseline"),
     ("vaccine_push", "Vaccine Push (+30% BCG)"),
     ("hiv_control", "HIV Control (-25% HIV)"),
-    ("health_boost", "Health System Boost (+25% spending)"),
+    ("income_up", "Income Level Up (one tier)"),
     ("combined", "Combined (all three)"),
 ]
 
@@ -156,7 +163,7 @@ with tab1:
         )
         c2.markdown(
             '<div class="card card-accent"><b>2. Choose a scenario</b><br>'
-            "<span style='color:#6B7280'>Vaccination, HIV control, health spending, "
+            "<span style='color:#6B7280'>Vaccination, HIV control, income level, "
             "or all three.</span></div>",
             unsafe_allow_html=True,
         )
@@ -188,8 +195,7 @@ with tab1:
                 BCG Coverage: &nbsp;<b>{_pct(stats['bcg_coverage'])}</b><br>
                 TB Incidence: &nbsp;<b>{_val(stats['tb_incidence'])} / 100k</b><br>
                 HIV Burden: &nbsp;<b>{_pct(stats['hiv_prevalence'])}</b><br>
-                GDP per capita: &nbsp;<b>{_usd(stats['gdp_per_capita'])}</b><br>
-                Healthcare Spend: &nbsp;<b>{_pct(stats['health_expenditure'])} of GDP</b><br>
+                Income Level: &nbsp;<b>{INCOME_LABELS.get(stats.get('income_level'), '—')}</b><br>
                 Population: &nbsp;<b>{fmt_pop(stats['population'])}</b>
                 </div>""",
                 unsafe_allow_html=True,
@@ -208,15 +214,21 @@ with tab1:
 
             with st.expander("⚙️ Adjust individual factors"):
                 st.caption("These override the scenario values above")
-                use_custom = st.checkbox("Use custom slider values", value=False)
+                use_custom = st.checkbox("Use custom values", value=False)
                 bcg_v = st.slider("BCG Coverage (%)", 0.0, 100.0,
                                   float(stats["bcg_coverage"] or 0))
                 hiv_v = st.slider("HIV Prevalence (%)", 0.0, 30.0,
                                   float(stats["hiv_prevalence"] or 0))
-                health_v = st.slider("Health Expenditure (% GDP)", 0.0, 20.0,
-                                     float(stats["health_expenditure"] or 0))
-                gdp_v = st.slider("GDP per capita ($)", 0.0, 100000.0,
-                                  float(stats["gdp_per_capita"] or 0))
+                income_options = ["L", "LM", "UM", "H"]
+                cur_income = stats.get("income_level")
+                income_idx = (
+                    income_options.index(cur_income)
+                    if cur_income in income_options else 0
+                )
+                income_v = st.selectbox(
+                    "Income Level", income_options, index=income_idx,
+                    format_func=lambda x: INCOME_LABELS.get(x, x),
+                )
 
             if st.button("Explore Scenario →", key="run"):
                 payload = {
@@ -226,7 +238,7 @@ with tab1:
                 if use_custom:
                     payload.update(
                         bcg_override=bcg_v, hiv_override=hiv_v,
-                        health_override=health_v, gdp_override=gdp_v,
+                        income_override=income_v,
                     )
                 st.session_state.result = api_post("/simulate", payload)
 
@@ -284,8 +296,7 @@ with tab1:
                 This estimate does not mean prevention alone caused this change.
                 TB is shaped by many interacting factors:<br><br>
                 <b>HIV prevalence</b> — HIV increases risk of latent TB becoming active<br>
-                <b>GDP per capita</b> — Lower income = higher exposure, delayed care<br>
-                <b>Health expenditure</b> — Better systems detect and treat TB earlier<br>
+                <b>Income level</b> — Lower income = higher exposure, delayed care<br>
                 <b>BCG coverage</b> — Childhood protection, not full adult prevention<br>
                 <b>Region</b> — Captures broader public health patterns
                 </div>""",
@@ -360,10 +371,10 @@ with tab3:
 
     st.markdown("### Data Sources")
     st.markdown(
-        "- WHO/UNICEF WUENIC Immunization Coverage Estimates\n"
-        "- WHO Global Tuberculosis Programme Data\n"
-        "- Our World in Data — TB, HIV, GDP, Health Expenditure, Population\n"
-        "- World Bank Development Indicators / UNAIDS"
+        "- WHO Global Tuberculosis Programme — notifications, population, income level\n"
+        "- WHO/UNICEF WUENIC Immunization Coverage Estimates (BCG)\n"
+        "- Our World in Data — BCG coverage and HIV prevalence\n"
+        "- World Bank income classification / UNAIDS"
     )
 
     st.markdown(

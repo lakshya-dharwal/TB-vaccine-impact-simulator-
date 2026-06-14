@@ -8,9 +8,16 @@ SCENARIO_LABELS = {
     "baseline": "no change",
     "vaccine_push": "a vaccination push",
     "hiv_control": "stronger HIV control",
-    "health_boost": "more healthcare investment",
+    "income_up": "broader economic development",
     "combined": "a combined prevention effort",
     "custom": "your custom adjustments",
+}
+
+INCOME_WORDS = {
+    "L": "low-income",
+    "LM": "lower-middle-income",
+    "UM": "upper-middle-income",
+    "H": "high-income",
 }
 
 
@@ -26,12 +33,13 @@ def generate_country_story(country: str, row) -> str:
     """Explain, in one short paragraph, why a country has its TB burden."""
     bcg = float(row.get("bcg_coverage") or 0)
     tb = float(row.get("tb_incidence") or 0)
-    gdp = float(row.get("gdp_per_capita") or 0)
     hiv = float(row.get("hiv_prevalence") or 0)
+    income = row.get("income_level")
     region = row.get("region", "its region")
 
     high_tb = tb >= 150
     low_tb = tb < 40
+    low_income = income in ("L", "LM")
 
     if hiv > 5 and high_tb:
         return (
@@ -39,17 +47,18 @@ def generate_country_story(country: str, row) -> str:
             f"because an HIV prevalence of {hiv:.1f}% significantly increases the risk "
             f"that latent TB becomes active disease."
         )
-    if gdp < 2000 and high_tb:
+    if low_income and high_tb:
         return (
-            f"{country}'s high TB burden reflects the compounding effects of limited "
-            f"economic resources and healthcare access, where delayed diagnosis and "
-            f"incomplete treatment allow transmission to persist."
+            f"As a {INCOME_WORDS.get(income, 'lower-income')} country, {country}'s high "
+            f"TB burden reflects the compounding effects of limited economic resources "
+            f"and healthcare access, where delayed diagnosis and incomplete treatment "
+            f"allow transmission to persist."
         )
     if bcg >= 90 and low_tb:
         return (
             f"{country} demonstrates how strong vaccination infrastructure combined with "
-            f"higher healthcare investment and lower HIV burden can suppress TB incidence "
-            f"even in {region}."
+            f"a stronger economy and lower HIV burden can suppress TB incidence even in "
+            f"{region}."
         )
     if bcg < 60 and low_tb:
         return (
@@ -59,8 +68,7 @@ def generate_country_story(country: str, row) -> str:
         )
     return (
         f"{country} has {_burden_level(tb)} TB incidence influenced by a combination of "
-        f"vaccination coverage, economic conditions, HIV burden, and healthcare system "
-        f"capacity."
+        f"vaccination coverage, income level, HIV burden, and healthcare system capacity."
     )
 
 

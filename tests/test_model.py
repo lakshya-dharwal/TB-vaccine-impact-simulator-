@@ -18,14 +18,14 @@ pytestmark = pytest.mark.skipif(
 
 EXPECTED_KEYS = {
     "country", "scenario", "current_bcg_coverage", "simulated_bcg_coverage",
-    "current_hiv_prevalence", "simulated_hiv_prevalence", "current_health_expenditure",
-    "simulated_health_expenditure", "current_tb_incidence", "predicted_tb_incidence",
+    "current_hiv_prevalence", "simulated_hiv_prevalence", "current_income_level",
+    "simulated_income_level", "current_tb_incidence", "predicted_tb_incidence",
     "absolute_reduction", "relative_reduction_pct", "ci_lower", "ci_upper",
     "population", "cases_prevented_per_year", "country_story",
     "scenario_explanation", "disclaimer",
 }
 
-SCENARIOS = ["baseline", "vaccine_push", "hiv_control", "health_boost", "combined"]
+SCENARIOS = ["baseline", "vaccine_push", "hiv_control", "income_up", "combined"]
 
 
 @pytest.fixture(scope="module")
