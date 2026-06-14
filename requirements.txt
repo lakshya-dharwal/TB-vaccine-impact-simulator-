@@ -1,0 +1,13 @@
+fastapi
+uvicorn[standard]
+pydantic>=2.0
+scikit-learn
+pandas
+numpy
+joblib
+streamlit
+plotly
+httpx
+pytest
+pytest-asyncio
+requests
