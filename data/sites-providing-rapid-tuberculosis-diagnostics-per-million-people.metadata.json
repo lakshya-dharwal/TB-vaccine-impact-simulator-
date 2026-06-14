@@ -1,0 +1,35 @@
+{
+  "chart": {
+    "title": "Sites providing rapid tuberculosis diagnostics per million people",
+    "subtitle": "The number of sites providing diagnosis for tuberculosis, using molecular WHO-recommended rapid diagnostics, per million people in the population.",
+    "citation": "WHO (2025); UN, World Population Prospects (2024)",
+    "originalChartUrl": "https://ourworldindata.org/grapher/sites-providing-rapid-tuberculosis-diagnostics-per-million-people?v=1&csvType=full&useColumnShortNames=false",
+    "selection": [
+      "South Africa",
+      "Nigeria",
+      "Kenya",
+      "India",
+      "China",
+      "Brazil",
+      "Afghanistan"
+    ]
+  },
+  "columns": {
+    "Sites providing TB diagnostic services using molecular WHO-recommended rapid diagnostics per million population": {
+      "titleShort": "Sites providing TB diagnostic services using molecular WHO-recommended rapid diagnostics per million population",
+      "titleLong": "Sites providing TB diagnostic services using molecular WHO-recommended rapid diagnostics per million population",
+      "descriptionShort": "Number of sites providing TB diagnostic services using molecular WHO-recommended rapid diagnostics at the end of the reporting year per million population.",
+      "unit": "sites per million population",
+      "timespan": "2020-2023",
+      "type": "Numeric",
+      "owidVariableId": 1146297,
+      "shortName": "m_wrd_rate",
+      "lastUpdated": "2026-02-05",
+      "citationShort": "WHO (2025); UN, World Population Prospects (2024) – with major processing by Our World in Data",
+      "citationLong": "WHO (2025); UN, World Population Prospects (2024) – with major processing by Our World in Data. “Sites providing TB diagnostic services using molecular WHO-recommended rapid diagnostics per million population” [dataset]. WHO, “Global Tuberculosis Report - Laboratory Diagnostic Services”; United Nations, “World Population Prospects”; United Nations, “World Population Prospects - Interim Update” [original data].",
+      "fullMetadata": "https://api.ourworldindata.org/v1/indicators/1146297.metadata.json"
+    }
+  },
+  "dateDownloaded": "2026-06-14",
+  "activeFilters": {}
+}
