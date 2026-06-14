@@ -1,7 +1,8 @@
 """TB Futures FastAPI backend.
 
 Serves country statistics, the choropleth map data, model metadata, and runs
-counterfactual simulations against the trained Random Forest.
+counterfactual simulations against the trained Random Forest. The set of
+covariates and scenarios is data-adaptive and read from the saved schema.
 """
 
 import json
@@ -19,7 +20,7 @@ from src.model.predict import simulate
 DATA_PATH = "data/processed/merged_tb_dataset.csv"
 MODELS_DIR = "models"
 
-app = FastAPI(title="TB Futures API", version="1.0.0")
+app = FastAPI(title="TB Futures API", version="2.0.0")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -32,7 +33,7 @@ app.add_middleware(
 class State:
     df: pd.DataFrame = None
     model = None
-    feature_columns = None
+    schema = None
     metrics = None
     feature_importance = None
 
@@ -45,9 +46,9 @@ def _load():
         state.df = pd.read_csv(DATA_PATH)
     if state.model is None:
         state.model = joblib.load(os.path.join(MODELS_DIR, "rf_model.pkl"))
-    if state.feature_columns is None:
-        with open(os.path.join(MODELS_DIR, "feature_columns.json")) as f:
-            state.feature_columns = json.load(f)
+    if state.schema is None:
+        with open(os.path.join(MODELS_DIR, "schema.json")) as f:
+            state.schema = json.load(f)
     if state.metrics is None:
         with open(os.path.join(MODELS_DIR, "model_metrics.json")) as f:
             state.metrics = json.load(f)
@@ -61,8 +62,6 @@ def startup():
     try:
         _load()
     except FileNotFoundError:
-        # Allow the app to boot even if artifacts aren't built yet; endpoints
-        # that need them will raise a clear error.
         pass
 
 
@@ -73,23 +72,38 @@ def _latest_row(country: str):
     return sub.sort_values("year").iloc[-1]
 
 
+def _num(value):
+    try:
+        if value is None or pd.isna(value):
+            return None
+    except (TypeError, ValueError):
+        return None
+    return float(value)
+
+
 class SimulationRequest(BaseModel):
     country: str
-    scenario: str  # baseline, vaccine_push, hiv_control, income_up, combined, custom
+    scenario: str  # baseline, vaccine_push, hiv_control, health_boost, income_up, combined, custom
     bcg_override: float | None = None
     hiv_override: float | None = None
-    income_override: str | None = None  # L, LM, UM, H
+    gdp_override: float | None = None
+    health_override: float | None = None
+    income_override: str | None = None
 
 
 class SimulationResponse(BaseModel):
     country: str
     scenario: str
-    current_bcg_coverage: float
-    simulated_bcg_coverage: float
-    current_hiv_prevalence: float
-    simulated_hiv_prevalence: float
-    current_income_level: str | None
-    simulated_income_level: str | None
+    current_bcg_coverage: float | None = None
+    simulated_bcg_coverage: float | None = None
+    current_hiv_prevalence: float | None = None
+    simulated_hiv_prevalence: float | None = None
+    current_gdp_per_capita: float | None = None
+    simulated_gdp_per_capita: float | None = None
+    current_health_expenditure: float | None = None
+    simulated_health_expenditure: float | None = None
+    current_income_level: str | None = None
+    simulated_income_level: str | None = None
     current_tb_incidence: float
     predicted_tb_incidence: float
     absolute_reduction: float
@@ -108,6 +122,19 @@ def health():
     return {"status": "ok"}
 
 
+@app.get("/config")
+def config():
+    """Data-adaptive layout: which covariates and scenarios are available."""
+    _load()
+    return {
+        "covariates": state.schema["covariates"],
+        "scenarios": state.schema["scenarios"],
+        "income_levels": state.schema["income_levels"],
+        "regions": state.schema["regions"],
+        "use_income": state.schema["use_income"],
+    }
+
+
 @app.get("/countries")
 def countries():
     _load()
@@ -118,61 +145,56 @@ def countries():
 def country(country_name: str):
     _load()
     row = _latest_row(country_name)
-    return {
+    out = {
         "country": country_name,
         "year": int(row["year"]),
-        "bcg_coverage": _num(row.get("bcg_coverage")),
         "tb_incidence": _num(row.get("tb_incidence")),
-        "hiv_prevalence": _num(row.get("hiv_prevalence")),
-        "income_level": row.get("income_level"),
         "population": _num(row.get("population")),
+        "income_level": row.get("income_level") if state.schema["use_income"] else None,
         "region": row.get("region"),
         "country_story": generate_country_story(country_name, row.to_dict()),
     }
+    for cov in ("bcg_coverage", "hiv_prevalence", "gdp_per_capita", "health_expenditure"):
+        if cov in row.index:
+            out[cov] = _num(row.get(cov))
+    return out
 
 
 @app.post("/simulate", response_model=SimulationResponse)
 def run_simulation(req: SimulationRequest):
     _load()
-    # Validate country up front so unknown countries return 422.
-    _latest_row(req.country)
+    _latest_row(req.country)  # 422 on unknown country
 
-    valid = {"baseline", "vaccine_push", "hiv_control", "income_up", "combined", "custom"}
+    valid = set(state.schema["scenarios"]) | {"custom"}
     if req.scenario not in valid:
         raise HTTPException(status_code=422, detail=f"Unknown scenario: {req.scenario}")
 
     overrides = {
         "bcg_coverage": req.bcg_override,
         "hiv_prevalence": req.hiv_override,
+        "gdp_per_capita": req.gdp_override,
+        "health_expenditure": req.health_override,
         "income_level": req.income_override,
     }
     overrides = {k: v for k, v in overrides.items() if v is not None}
 
-    result = simulate(
-        req.country, req.scenario, overrides, state.df, state.model, state.feature_columns
-    )
-    return result
+    return simulate(req.country, req.scenario, overrides, state.df, state.model,
+                    state.schema)
 
 
 @app.get("/map-data")
 def map_data():
     _load()
-    latest = (
-        state.df.sort_values("year")
-        .groupby("country", as_index=False)
-        .last()
-    )
+    latest = state.df.sort_values("year").groupby("country", as_index=False).last()
     out = []
     for _, row in latest.iterrows():
-        out.append(
-            {
-                "country": row["country"],
-                "iso3": row["iso3"],
-                "tb_incidence": _num(row.get("tb_incidence")),
-                "bcg_coverage": _num(row.get("bcg_coverage")),
-                "hiv_prevalence": _num(row.get("hiv_prevalence")),
-            }
-        )
+        out.append({
+            "country": row["country"],
+            "iso3": row["iso3"],
+            "tb_incidence": _num(row.get("tb_incidence")),
+            "bcg_coverage": _num(row.get("bcg_coverage")),
+            "hiv_prevalence": _num(row.get("hiv_prevalence")),
+        })
     return out
 
 
@@ -180,27 +202,24 @@ def map_data():
 def whatif_map(bcg: float = 90.0):
     """Predicted TB burden for every country if BCG coverage were set to `bcg`%."""
     _load()
-    countries_list = state.df["country"].unique().tolist()
+    if "bcg_coverage" not in state.schema["numeric"]:
+        raise HTTPException(status_code=404, detail="BCG coverage is not in this model.")
     out = []
-    for name in countries_list:
+    for name in state.df["country"].unique().tolist():
         try:
-            res = simulate(
-                name, "custom", {"bcg_coverage": bcg}, state.df, state.model,
-                state.feature_columns,
-            )
+            res = simulate(name, "custom", {"bcg_coverage": bcg}, state.df,
+                           state.model, state.schema)
         except KeyError:
             continue
         iso3 = state.df[state.df["country"] == name]["iso3"].iloc[-1]
-        out.append(
-            {
-                "country": name,
-                "iso3": iso3,
-                "predicted_tb_incidence": res["predicted_tb_incidence"],
-                "current_tb_incidence": res["current_tb_incidence"],
-                "bcg_coverage": res["simulated_bcg_coverage"],
-                "hiv_prevalence": res["current_hiv_prevalence"],
-            }
-        )
+        out.append({
+            "country": name,
+            "iso3": iso3,
+            "predicted_tb_incidence": res["predicted_tb_incidence"],
+            "current_tb_incidence": res["current_tb_incidence"],
+            "bcg_coverage": res["simulated_bcg_coverage"],
+            "hiv_prevalence": res["current_hiv_prevalence"],
+        })
     return out
 
 
@@ -210,16 +229,8 @@ def model_info():
     return {
         "metrics": state.metrics,
         "feature_importance": state.feature_importance,
+        "schema": state.schema,
         "training_period": "2000-2017",
         "test_period": "2018-2022",
         "n_countries": int(state.df["country"].nunique()),
     }
-
-
-def _num(value):
-    try:
-        if value is None or pd.isna(value):
-            return None
-    except (TypeError, ValueError):
-        return None
-    return float(value)
