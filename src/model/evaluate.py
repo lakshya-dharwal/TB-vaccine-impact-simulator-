@@ -2,11 +2,16 @@
 
 import json
 import os
+import sys
+from pathlib import Path
 
 import joblib
 import numpy as np
 import pandas as pd
 from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
+
+# Allow running as a script (`python src/model/evaluate.py`) as well as a module.
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 from src.model.features import build_feature_matrix
 

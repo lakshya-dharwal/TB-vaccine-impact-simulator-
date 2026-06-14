@@ -108,18 +108,21 @@ TB-Futures/
 # 1. Install dependencies
 pip install -r requirements.txt
 
-# 2. Download BCG + HIV from OWID into data/raw/
-#    (who_tb_data_merged.csv must already be in data/raw/)
-python src/data/download_data.py
+# Run scripts from the repo root. The `python -m` form is canonical; the plain
+# `python src/...` form also works.
 
-# 3. Process and merge the 3 sources -> data/processed/merged_tb_dataset.csv
-python src/data/process_data.py
+# 2. Download optional covariates (BCG/HIV/GDP/health) from OWID into data/raw/
+#    (who_tb_data_merged.csv must already be in data/raw/)
+python -m src.data.download_data
+
+# 3. Process and merge whatever sources are present -> data/processed/merged_tb_dataset.csv
+python -m src.data.process_data
 
 # 4. Train the models (writes models/*.pkl + metadata)
-python src/model/train.py
+python -m src.model.train
 
 # 5. Evaluate on the held-out test set
-python src/model/evaluate.py
+python -m src.model.evaluate
 
 # 6. Start the API (terminal 1)
 uvicorn src.api.main:app --reload --port 8000

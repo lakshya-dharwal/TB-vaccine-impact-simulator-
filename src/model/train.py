@@ -8,6 +8,8 @@ saved so inference uses an identical layout.
 
 import json
 import os
+import sys
+from pathlib import Path
 
 import joblib
 import numpy as np
@@ -15,6 +17,9 @@ import pandas as pd
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.linear_model import LinearRegression
 from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
+
+# Allow running as a script (`python src/model/train.py`) as well as a module.
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 from src.model.features import build_feature_matrix, detect_schema
 
