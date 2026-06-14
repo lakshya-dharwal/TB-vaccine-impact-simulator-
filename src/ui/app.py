@@ -1,7 +1,9 @@
 """TB Futures — Streamlit frontend.
 
-Talks to the FastAPI backend over HTTP (httpx). No model code runs here. The
-visible covariates, sliders, and scenarios adapt to the backend /config.
+Talks to the FastAPI backend over HTTP (httpx). No model code runs here. All
+visible text uses explicit inline colors on a forced white background (see also
+.streamlit/config.toml) so the UI renders correctly regardless of the user's
+system light/dark setting.
 """
 
 import os
@@ -19,7 +21,13 @@ API_BASE = os.environ.get("TB_API_BASE", "http://localhost:8000")
 
 st.set_page_config(page_title="TB Futures", page_icon="🫁", layout="wide")
 
-# ---------------------------------------------------------------- display maps
+# Palette
+INK = "#1F2937"       # headings
+BODY = "#374151"      # body text
+MUTED = "#6B7280"     # secondary text
+ORANGE = "#F97316"
+GREEN = "#16A34A"
+
 SCENARIO_LABELS = {
     "baseline": "Baseline",
     "vaccine_push": "Vaccine Push (+30% BCG)",
@@ -48,35 +56,48 @@ COVARIATE_INFO = {
                      "Lower income = higher exposure, delayed care"),
 }
 
+# Minimal CSS — only for things inline styles cannot reach (app background,
+# Streamlit's own button/slider widgets). Everything else is styled inline.
 CSS = """
 <style>
-body, .stApp { background-color: #FFFFFF; }
-h1 { color: #1F2937; font-weight: 700; }
-h2, h3 { color: #1F2937; font-weight: 600; }
-p, label { color: #6B7280; }
-.card { background:#FFFFFF; border:1px solid #E5E7EB; border-radius:12px;
-    padding:20px; box-shadow:0 1px 3px rgba(0,0,0,0.08); margin-bottom:16px; }
-.card-accent { border-left: 4px solid #F97316; }
-.card-warning { background:#FFF7ED; border-left:4px solid #F97316;
-    border-radius:8px; padding:16px; margin-bottom:16px; }
-.metric-tile { background:#FFFFFF; border:1px solid #E5E7EB; border-radius:10px;
-    padding:16px; text-align:center; }
-.metric-value { font-size:28px; font-weight:700; color:#1F2937; }
-.metric-value-orange { font-size:28px; font-weight:700; color:#F97316; }
-.metric-value-green { font-size:28px; font-weight:700; color:#16A34A; }
-.metric-label { font-size:12px; color:#9CA3AF; text-transform:uppercase; letter-spacing:0.05em; }
-.badge-green { background:#DCFCE7; color:#166534; padding:4px 10px; border-radius:999px; font-size:12px; }
-.badge-yellow { background:#FEF9C3; color:#854D0E; padding:4px 10px; border-radius:999px; font-size:12px; }
-.badge-red { background:#FEE2E2; color:#991B1B; padding:4px 10px; border-radius:999px; font-size:12px; }
-.stButton > button { background-color:#F97316; color:white; border:none; border-radius:8px;
-    font-weight:600; padding:10px 24px; }
-.stButton > button:hover { background-color:#EA6C0A; color:white; }
-.stSlider > div > div > div { background:#F97316 !important; }
-.orange-divider { height:3px; background:#F97316; border:none; border-radius:2px; margin:8px 0 20px 0; }
-.country-story { color:#6B7280; font-style:italic; margin-top:8px; }
+.stApp, [data-testid="stAppViewContainer"], [data-testid="stHeader"],
+.main, .block-container { background-color: #FFFFFF !important; }
+section[data-testid="stSidebar"] { background-color: #F9FAFB !important; }
+.stButton > button {
+    background-color: #F97316 !important; color: #FFFFFF !important; border: none;
+    border-radius: 8px; font-weight: 600; padding: 10px 22px;
+}
+.stButton > button:hover { background-color: #EA6C0A !important; color: #FFFFFF !important; }
+.stButton > button p { color: #FFFFFF !important; }
+[data-baseweb="slider"] div[role="slider"] { background: #F97316 !important; }
 </style>
 """
 st.markdown(CSS, unsafe_allow_html=True)
+
+
+# ---------------------------------------------------------------- inline helpers
+def heading(text, size=22, weight=700, mt=14, mb=8):
+    st.markdown(
+        f'<div style="color:{INK};font-size:{size}px;font-weight:{weight};'
+        f'margin:{mt}px 0 {mb}px 0;">{text}</div>', unsafe_allow_html=True)
+
+
+def small(text, color=MUTED):
+    st.markdown(
+        f'<div style="color:{color};font-size:13px;margin:2px 0 10px 0;">{text}</div>',
+        unsafe_allow_html=True)
+
+
+def tile(label, value, value_color=INK, sub=None):
+    sub_html = (f'<div style="color:#9CA3AF;font-size:12px;text-transform:uppercase;'
+                f'letter-spacing:0.05em;">{sub}</div>') if sub else ""
+    return (
+        f'<div style="background:#FFFFFF;border:1px solid #E5E7EB;border-radius:10px;'
+        f'padding:16px;text-align:center;">'
+        f'<div style="color:#9CA3AF;font-size:12px;text-transform:uppercase;'
+        f'letter-spacing:0.05em;">{label}</div>'
+        f'<div style="color:{value_color};font-size:28px;font-weight:700;">{value}</div>'
+        f'{sub_html}</div>')
 
 
 # ---------------------------------------------------------------- API helpers
@@ -96,12 +117,15 @@ def api_post(path: str, payload: dict):
 
 
 def trust_badges():
-    st.markdown('<span class="badge-green">🟢 Good for: Learning TB risk patterns and '
-                "exploring what-if scenarios</span>", unsafe_allow_html=True)
-    st.markdown('<span class="badge-yellow">🟡 Use with caution: Comparing exact outcomes '
-                "between countries</span>", unsafe_allow_html=True)
-    st.markdown('<span class="badge-red">🔴 Not for: Clinical decisions, policy '
-                "implementation, or research claims</span>", unsafe_allow_html=True)
+    badges = [
+        ("#DCFCE7", "#166534", "🟢 Good for: Learning TB risk patterns and exploring what-if scenarios"),
+        ("#FEF9C3", "#854D0E", "🟡 Use with caution: Comparing exact outcomes between countries"),
+        ("#FEE2E2", "#991B1B", "🔴 Not for: Clinical decisions, policy implementation, or research claims"),
+    ]
+    for bg, fg, text in badges:
+        st.markdown(
+            f'<div style="background:{bg};color:{fg};padding:6px 12px;border-radius:8px;'
+            f'font-size:13px;margin:4px 0;">{text}</div>', unsafe_allow_html=True)
 
 
 def fmt_pop(pop):
@@ -117,11 +141,16 @@ def fmt_pop(pop):
 
 
 # ---------------------------------------------------------------- Header
-st.markdown("# TB Futures")
-st.markdown("Explore how prevention, HIV burden, income, and healthcare access shape "
-            "tuberculosis risk")
-st.markdown('<hr class="orange-divider">', unsafe_allow_html=True)
-st.caption("A what-if lab for global TB prevention — built on real WHO/UNICEF/World Bank data")
+st.markdown(
+    f'<div style="color:{INK};font-size:42px;font-weight:800;margin-bottom:2px;">'
+    "TB Futures</div>", unsafe_allow_html=True)
+st.markdown(
+    f'<div style="color:{BODY};font-size:17px;margin-bottom:10px;">Explore how prevention, '
+    "HIV burden, income, and healthcare access shape tuberculosis risk</div>",
+    unsafe_allow_html=True)
+st.markdown('<hr style="height:3px;background:#F97316;border:none;border-radius:2px;'
+            'margin:6px 0 14px 0;">', unsafe_allow_html=True)
+small("A what-if lab for global TB prevention — built on real WHO/UNICEF/World Bank data")
 
 if "selected_country" not in st.session_state:
     st.session_state.selected_country = None
@@ -148,22 +177,26 @@ tab1, tab2, tab3 = st.tabs(["🔬 Scenario Explorer", "🌍 World Map", "📊 Mo
 # ============================================================ TAB 1
 with tab1:
     if not st.session_state.selected_country:
-        st.subheader("What if TB prevention improved?")
+        heading("What if TB prevention improved?", size=24)
         c1, c2, c3 = st.columns(3)
         for col, (n, body) in zip([c1, c2, c3], [
             ("1. Pick a country", "Choose from the WHO member states in the dataset."),
             ("2. Choose a scenario", "Vaccination, HIV control, income, or a mix."),
             ("3. Understand the result", "See estimated burden change with honest uncertainty."),
         ]):
-            col.markdown(f'<div class="card card-accent"><b>{n}</b><br>'
-                         f"<span style='color:#6B7280'>{body}</span></div>",
-                         unsafe_allow_html=True)
+            col.markdown(
+                f'<div style="background:#FFFFFF;border:1px solid #E5E7EB;'
+                f'border-left:4px solid {ORANGE};border-radius:12px;padding:18px;'
+                f'box-shadow:0 1px 3px rgba(0,0,0,0.08);min-height:96px;">'
+                f'<div style="color:{INK};font-weight:700;font-size:16px;">{n}</div>'
+                f'<div style="color:{BODY};font-size:14px;margin-top:6px;">{body}</div></div>',
+                unsafe_allow_html=True)
 
     left, right = st.columns([1, 1.2])
 
     # ---------------- Inputs
     with left:
-        st.markdown("### Country")
+        heading("Country", size=20)
         if API_OK and COUNTRIES:
             default_idx = (COUNTRIES.index(st.session_state.selected_country)
                            if st.session_state.selected_country in COUNTRIES else 0)
@@ -172,17 +205,24 @@ with tab1:
 
             stats = api_get(f"/country/{chosen}")
 
-            rows_html = [f"TB Incidence: &nbsp;<b>{_val(stats['tb_incidence'])} / 100k</b>"]
+            lines = [f'TB Incidence: <b style="color:{INK};">{_val(stats["tb_incidence"])} / 100k</b>']
             for cov in COVARIATES:
                 label, fmt, _ = COVARIATE_INFO[cov]
-                rows_html.append(f"{label}: &nbsp;<b>{fmt(stats.get(cov))}</b>")
-            rows_html.append(f"Population: &nbsp;<b>{fmt_pop(stats['population'])}</b>")
-            st.markdown(f'<div class="card card-accent"><b>{chosen} at a glance</b><br><br>'
-                        + "<br>".join(rows_html) + "</div>", unsafe_allow_html=True)
-            st.markdown(f'<p class="country-story">{stats.get("country_story", "")}</p>',
-                        unsafe_allow_html=True)
+                lines.append(f'{label}: <b style="color:{INK};">{fmt(stats.get(cov))}</b>')
+            lines.append(f'Population: <b style="color:{INK};">{fmt_pop(stats["population"])}</b>')
+            body_html = "<br>".join(
+                f'<span style="color:{BODY};">{ln}</span>' for ln in lines)
+            st.markdown(
+                f'<div style="background:#FFFFFF;border:1px solid #E5E7EB;'
+                f'border-left:4px solid {ORANGE};border-radius:12px;padding:18px;'
+                f'box-shadow:0 1px 3px rgba(0,0,0,0.08);">'
+                f'<div style="color:{INK};font-weight:700;font-size:16px;margin-bottom:10px;">'
+                f'{chosen} at a glance</div>{body_html}</div>', unsafe_allow_html=True)
+            st.markdown(
+                f'<p style="color:{MUTED};font-style:italic;margin-top:10px;">'
+                f'{stats.get("country_story", "")}</p>', unsafe_allow_html=True)
 
-            st.markdown("### Choose a scenario")
+            heading("Choose a scenario", size=20)
             cols = st.columns(len(SCENARIOS))
             for i, key in enumerate(SCENARIOS):
                 if cols[i].button(SCENARIO_LABELS.get(key, key), key=f"sc_{key}",
@@ -190,11 +230,12 @@ with tab1:
                     st.session_state.scenario = key
             if st.session_state.scenario not in SCENARIOS:
                 st.session_state.scenario = "baseline"
-            st.caption(f"Selected scenario: **{SCENARIO_LABELS.get(st.session_state.scenario)}**")
+            small(f'Selected scenario: <b style="color:{INK};">'
+                  f'{SCENARIO_LABELS.get(st.session_state.scenario)}</b>', color=BODY)
 
             overrides = {}
             with st.expander("⚙️ Adjust individual factors"):
-                st.caption("These override the scenario values above")
+                small("These override the scenario values above")
                 use_custom = st.checkbox("Use custom values", value=False)
                 if "bcg_coverage" in COVARIATES:
                     overrides["bcg_override"] = st.slider(
@@ -228,49 +269,52 @@ with tab1:
     with right:
         result = st.session_state.result
         if result:
-            st.markdown("### Results")
+            heading("Results", size=20)
             r1c1, r1c2 = st.columns(2)
-            r1c1.markdown(
-                f'<div class="metric-tile"><div class="metric-label">Current TB Incidence</div>'
-                f'<div class="metric-value">{result["current_tb_incidence"]:.0f}</div>'
-                f'<div class="metric-label">/ 100k</div></div>', unsafe_allow_html=True)
-            r1c2.markdown(
-                f'<div class="metric-tile"><div class="metric-label">Predicted TB Incidence</div>'
-                f'<div class="metric-value-orange">{result["predicted_tb_incidence"]:.0f}</div>'
-                f'<div class="metric-label">/ 100k</div></div>', unsafe_allow_html=True)
+            r1c1.markdown(tile("Current TB Incidence",
+                               f'{result["current_tb_incidence"]:.0f}', INK, "/ 100k"),
+                          unsafe_allow_html=True)
+            r1c2.markdown(tile("Predicted TB Incidence",
+                               f'{result["predicted_tb_incidence"]:.0f}', ORANGE, "/ 100k"),
+                          unsafe_allow_html=True)
             st.write("")
             r2c1, r2c2 = st.columns(2)
             prevented = max(result["cases_prevented_per_year"], 0)
-            r2c1.markdown(
-                f'<div class="metric-tile"><div class="metric-label">Cases Prevented / Year</div>'
-                f'<div class="metric-value-green">~{prevented:,.0f}</div></div>',
-                unsafe_allow_html=True)
-            r2c2.markdown(
-                f'<div class="metric-tile"><div class="metric-label">Relative Reduction</div>'
-                f'<div class="metric-value-green">{result["relative_reduction_pct"]:.1f}%</div></div>',
-                unsafe_allow_html=True)
-            st.caption("Estimated cases prevented per year based on country population")
+            r2c1.markdown(tile("Cases Prevented / Year", f"~{prevented:,.0f}", GREEN),
+                          unsafe_allow_html=True)
+            r2c2.markdown(tile("Relative Reduction",
+                               f'{result["relative_reduction_pct"]:.1f}%', GREEN),
+                          unsafe_allow_html=True)
+            small("Estimated cases prevented per year based on country population")
 
-            st.markdown("#### 95% Model Uncertainty Interval")
+            heading("95% Model Uncertainty Interval", size=16)
             st.plotly_chart(ci_figure(result), use_container_width=True)
-            st.caption(f'{result["ci_lower"]:.0f} — {result["ci_upper"]:.0f} cases per 100k. '
-                       "Reflects ML model variance, not epidemiological certainty")
+            small(f'{result["ci_lower"]:.0f} — {result["ci_upper"]:.0f} cases per 100k. '
+                  "Reflects ML model variance, not epidemiological certainty")
 
             st.plotly_chart(before_after_figure(result), use_container_width=True)
             st.plotly_chart(gauge_figure(result), use_container_width=True)
 
             factors = "".join(
-                f"<b>{COVARIATE_INFO[c][0]}</b> — {COVARIATE_INFO[c][2]}<br>"
+                f'<div style="color:{BODY};margin:3px 0;"><b style="color:{INK};">'
+                f"{COVARIATE_INFO[c][0]}</b> — {COVARIATE_INFO[c][2]}</div>"
                 for c in COVARIATES)
-            st.markdown(f"""<div class="card-warning"><b>⚠️ Reality Check</b><br>
-                This estimate does not mean prevention alone caused this change.
-                TB is shaped by many interacting factors:<br><br>
-                {factors}<b>Region</b> — Captures broader public health patterns</div>""",
-                        unsafe_allow_html=True)
+            st.markdown(
+                f'<div style="background:#FFF7ED;border-left:4px solid {ORANGE};'
+                f'border-radius:8px;padding:16px;margin:8px 0 12px 0;">'
+                f'<div style="color:{INK};font-weight:700;margin-bottom:8px;">⚠️ Reality Check</div>'
+                f'<div style="color:{BODY};margin-bottom:8px;">This estimate does not mean '
+                "prevention alone caused this change. TB is shaped by many interacting "
+                f'factors:</div>{factors}'
+                f'<div style="color:{BODY};margin:3px 0;"><b style="color:{INK};">Region</b> '
+                "— Captures broader public health patterns</div></div>",
+                unsafe_allow_html=True)
 
-            st.markdown(f"**In plain terms:** {result['scenario_explanation']}")
-            st.caption(result["disclaimer"])
-            st.markdown("#### How much should you trust this?")
+            st.markdown(f'<div style="color:{BODY};margin:6px 0;"><b style="color:{INK};">'
+                        f'In plain terms:</b> {result["scenario_explanation"]}</div>',
+                        unsafe_allow_html=True)
+            small(result["disclaimer"])
+            heading("How much should you trust this?", size=16)
             trust_badges()
         else:
             st.info("Select a country and scenario, then click **Explore Scenario →**.")
@@ -278,33 +322,36 @@ with tab1:
 
 # ============================================================ TAB 2
 with tab2:
-    st.subheader("Global TB Picture")
+    heading("Global TB Picture", size=22)
     if API_OK:
         views = ["TB Burden", "BCG Coverage", "HIV Burden"]
         if "bcg_coverage" in COVARIATES:
             views.append("What-If: All at 90% BCG")
         view = st.radio("Map view", views, horizontal=True)
         with st.spinner("Rendering map…"):
-            st.plotly_chart(world_map(view, API_BASE), use_container_width=True)
-        st.caption("Hover a country for details. Most recent year available per country.")
+            st.plotly_chart(world_map(view, API_BASE), use_container_width=True,
+                            config={"displayModeBar": False})
+        small("Hover a country for details. Most recent year available per country.")
 
 
 # ============================================================ TAB 3
 with tab3:
-    st.subheader("About This Model")
-    st.markdown("""<div class="card">
-        TB Futures uses a <b>Random Forest Regression</b> model trained on real WHO,
-        UNICEF, and World Bank data spanning 2000 to 2022.<br><br>
-        <b>Training period:</b> 2000 – 2017<br>
-        <b>Test period:</b> 2018 – 2022 (held out, never seen during training)<br>
-        <b>Target:</b> TB incidence per 100k, derived from WHO notifications
-        </div>""", unsafe_allow_html=True)
+    heading("About This Model", size=22)
+    st.markdown(
+        f'<div style="background:#FFFFFF;border:1px solid #E5E7EB;border-radius:12px;'
+        f'padding:18px;box-shadow:0 1px 3px rgba(0,0,0,0.08);color:{BODY};">'
+        'TB Futures uses a <b style="color:#1F2937;">Random Forest Regression</b> model '
+        "trained on real WHO, UNICEF, and World Bank data spanning 2000 to 2022.<br><br>"
+        '<b style="color:#1F2937;">Training period:</b> 2000 – 2017<br>'
+        '<b style="color:#1F2937;">Test period:</b> 2018 – 2022 (held out, never seen during training)<br>'
+        '<b style="color:#1F2937;">Target:</b> TB incidence per 100k, derived from WHO notifications'
+        "</div>", unsafe_allow_html=True)
 
     if API_OK:
         try:
             info = api_get("/model-info")
             m = info["metrics"]
-            st.markdown("### Model Performance")
+            heading("Model Performance", size=20)
             st.table({
                 "Metric": ["R²", "MAE (cases/100k)", "RMSE (cases/100k)"],
                 "Random Forest": [f"{m['rf']['r2']:.3f}", f"{m['rf']['mae']:.1f}",
@@ -313,25 +360,28 @@ with tab3:
                                       f"{m['lr']['rmse']:.1f}"],
             })
             st.plotly_chart(model_compare_figure(m), use_container_width=True)
-            st.markdown("### What drives TB incidence predictions?")
+            heading("What drives TB incidence predictions?", size=20)
             st.plotly_chart(importance_figure(info["feature_importance"]),
                             use_container_width=True)
         except Exception as exc:  # noqa: BLE001
             st.warning(f"Model info unavailable (train the model first): {exc}")
 
-    st.markdown("### Data Sources")
-    st.markdown("- WHO Global Tuberculosis Programme — notifications, population, income level\n"
-                "- WHO/UNICEF WUENIC Immunization Coverage Estimates (BCG)\n"
-                "- Our World in Data — BCG coverage, HIV, GDP, health expenditure (as available)\n"
-                "- World Bank income classification / UNAIDS")
+    heading("Data Sources", size=20)
+    st.markdown(
+        f'<div style="color:{BODY};">'
+        "• WHO Global Tuberculosis Programme — notifications, population, income level<br>"
+        "• WHO/UNICEF WUENIC Immunization Coverage Estimates (BCG)<br>"
+        "• Our World in Data — BCG coverage, HIV, GDP, health expenditure (as available)<br>"
+        "• World Bank income classification / UNAIDS</div>", unsafe_allow_html=True)
 
-    st.markdown("""<div class="card-warning">
-        <b>How much should you trust this?</b><br>
-        🟢 <b>Good for:</b> Learning how TB risk factors interact and exploring prevention scenarios<br>
-        🟡 <b>Use caution for:</b> Drawing specific conclusions about individual countries<br>
-        🔴 <b>Not for:</b> Clinical decisions, policy proposals, or scientific research without expert review<br><br>
-        This tool is built for education and portfolio demonstration. The Random Forest model
-        captures real statistical patterns in the data but cannot account for reporting bias,
-        transmission dynamics, time lags between vaccination and disease burden, or
-        country-specific confounders not present in the dataset.
-        </div>""", unsafe_allow_html=True)
+    st.markdown(
+        f'<div style="background:#FFF7ED;border-left:4px solid {ORANGE};border-radius:8px;'
+        f'padding:16px;margin-top:14px;color:{BODY};">'
+        f'<div style="color:{INK};font-weight:700;margin-bottom:8px;">How much should you trust this?</div>'
+        "🟢 <b>Good for:</b> Learning how TB risk factors interact and exploring prevention scenarios<br>"
+        "🟡 <b>Use caution for:</b> Drawing specific conclusions about individual countries<br>"
+        "🔴 <b>Not for:</b> Clinical decisions, policy proposals, or scientific research without expert review<br><br>"
+        "This tool is built for education and portfolio demonstration. The Random Forest model "
+        "captures real statistical patterns in the data but cannot account for reporting bias, "
+        "transmission dynamics, time lags between vaccination and disease burden, or "
+        "country-specific confounders not present in the dataset.</div>", unsafe_allow_html=True)

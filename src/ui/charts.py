@@ -172,10 +172,11 @@ def _choropleth(locations, z, text, colorscale, reversescale, title, cbar_title)
     fig.update_layout(
         paper_bgcolor="#FFFFFF",
         geo=dict(bgcolor="#FFFFFF", showframe=False, showcoastlines=False,
-                 projection_type="natural earth"),
-        height=520,
-        margin=dict(l=0, r=0, t=40, b=0),
-        title=dict(text=title, font=dict(color=DARK)),
+                 projection_type="natural earth", lataxis_range=[-58, 85]),
+        height=600,
+        autosize=True,
+        margin=dict(l=0, r=0, t=44, b=0),
+        title=dict(text=title, font=dict(color=DARK, size=18), x=0.01, xanchor="left"),
     )
     return fig
 
