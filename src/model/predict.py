@@ -1,8 +1,4 @@
-"""Counterfactual simulation and bootstrap uncertainty for TB Futures.
-
-Scenarios and covariates adapt to the trained schema: a lever is only applied
-if its covariate was part of the model.
-"""
+"""Counterfactual simulation and bootstrap uncertainty for TB Futures."""
 
 import numpy as np
 
@@ -17,7 +13,7 @@ DISCLAIMER = (
     "Not for clinical, policy, or research use without expert review."
 )
 
-N_BOOTSTRAP = 100  # exactly 100 bootstrap iterations
+N_BOOTSTRAP = 100
 
 
 def get_country_row(df, country: str):
@@ -43,22 +39,33 @@ def _apply_scenario(values: dict, scenario: str, schema: dict) -> dict:
     return v
 
 
-def _bootstrap_ci(model, feature_frame):
+def _inverse_target(value: float, schema: dict) -> float:
+    """Invert the trained target transform back into TB incidence space."""
+    if schema.get("log_target"):
+        return max(float(np.expm1(value)), 0.0)
+    return max(float(value), 0.0)
+
+
+def _predict_point(model, feature_frame, schema: dict) -> float:
+    return _inverse_target(float(model.predict(feature_frame)[0]), schema)
+
+
+def _bootstrap_ci(model, feature_frame, schema: dict):
     """95% interval from resampling the forest's trees 100 times."""
     estimators = getattr(model, "estimators_", None)
     if not estimators:
-        point = float(model.predict(feature_frame)[0])
+        point = _predict_point(model, feature_frame, schema)
         return point, point
 
     rng = np.random.default_rng(42)
     n = len(estimators)
     values = feature_frame.values
-    tree_preds = np.array([est.predict(values)[0] for est in estimators])
+    tree_preds = np.array([est.predict(values)[0] for est in estimators], dtype=float)
 
     boot_means = []
     for _ in range(N_BOOTSTRAP):
         idx = rng.integers(0, n, size=n)
-        boot_means.append(float(np.mean(tree_preds[idx])))
+        boot_means.append(_inverse_target(float(np.mean(tree_preds[idx])), schema))
 
     lower = float(np.percentile(boot_means, 2.5))
     upper = float(np.percentile(boot_means, 97.5))
@@ -69,7 +76,16 @@ def _round(value, ndigits=1):
     return round(float(value), ndigits) if value is not None else None
 
 
-def simulate(country, scenario, custom_overrides, df, model, schema):
+def simulate(
+    country,
+    scenario,
+    custom_overrides,
+    df,
+    model,
+    schema,
+    include_ci: bool = True,
+    include_story: bool = True,
+):
     """Run a counterfactual simulation and return a full result dict."""
     row = get_country_row(df, country)
 
@@ -88,10 +104,8 @@ def simulate(country, scenario, custom_overrides, df, model, schema):
 
     modified = _apply_scenario(base_values, scenario, schema)
 
-    # Individual overrides take precedence over the scenario (present covariates only).
     if custom_overrides:
-        for key in ("bcg_coverage", "hiv_prevalence", "gdp_per_capita",
-                    "health_expenditure", "income_level"):
+        for key in ("bcg_coverage", "hiv_prevalence", "gdp_per_capita", "health_expenditure", "income_level"):
             val = custom_overrides.get(key)
             if val is not None:
                 modified[key] = val if key == "income_level" else float(val)
@@ -99,8 +113,8 @@ def simulate(country, scenario, custom_overrides, df, model, schema):
     features = build_feature_vector(modified, schema)
     frame = vector_to_frame(features, schema)
 
-    predicted = max(float(model.predict(frame)[0]), 0.0)
-    ci_lower, ci_upper = _bootstrap_ci(model, frame)
+    predicted = _predict_point(model, frame, schema)
+    ci_lower, ci_upper = _bootstrap_ci(model, frame, schema) if include_ci else (predicted, predicted)
 
     absolute_reduction = current_tb - predicted
     relative_reduction_pct = (
@@ -111,7 +125,6 @@ def simulate(country, scenario, custom_overrides, df, model, schema):
     numeric = schema["numeric"]
 
     def cov(key, current):
-        """Current/simulated pair for a covariate, None when not modelled."""
         if key == "income_level":
             present = schema["use_income"]
         else:
@@ -130,9 +143,10 @@ def simulate(country, scenario, custom_overrides, df, model, schema):
     cur_health, sim_health = cov("health_expenditure", row.get("health_expenditure"))
     cur_income, sim_income = cov("income_level", row.get("income_level"))
 
-    story = generate_country_story(country, row)
-    explanation = generate_scenario_explanation(
-        country, scenario, current_tb, predicted, cases_prevented_per_year
+    story = generate_country_story(country, row) if include_story else ""
+    explanation = (
+        generate_scenario_explanation(country, scenario, current_tb, predicted, cases_prevented_per_year)
+        if include_story else ""
     )
 
     return {
@@ -160,3 +174,40 @@ def simulate(country, scenario, custom_overrides, df, model, schema):
         "scenario_explanation": explanation,
         "disclaimer": DISCLAIMER,
     }
+
+
+def prioritize(df, model, schema, bcg_target: float = 90.0, top: int = 20):
+    """Rank countries by estimated cases prevented under a BCG target."""
+    latest = df.sort_values("year").groupby("country", as_index=False).last()
+    rows = []
+    for _, row in latest.iterrows():
+        if "bcg_coverage" not in row or np.isnan(row["bcg_coverage"]):
+            continue
+        result = simulate(
+            row["country"],
+            "custom",
+            {"bcg_coverage": min(float(bcg_target), 99.0)},
+            df,
+            model,
+            schema,
+            include_ci=False,
+            include_story=False,
+        )
+        rows.append(
+            {
+                "country": row["country"],
+                "iso3": row["iso3"],
+                "region": row["region"],
+                "income_level": row["income_level"] if schema["use_income"] else None,
+                "population": float(row.get("population") or 0),
+                "current_tb_incidence": result["current_tb_incidence"],
+                "predicted_tb_incidence": result["predicted_tb_incidence"],
+                "cases_prevented_per_year": max(float(result["cases_prevented_per_year"]), 0.0),
+                "relative_reduction_pct": max(float(result["relative_reduction_pct"]), 0.0),
+                "current_bcg_coverage": row.get("bcg_coverage"),
+                "rapid_dx_sites": row.get("rapid_dx_sites"),
+            }
+        )
+
+    rows = sorted(rows, key=lambda item: item["cases_prevented_per_year"], reverse=True)
+    return rows[:max(1, int(top))]

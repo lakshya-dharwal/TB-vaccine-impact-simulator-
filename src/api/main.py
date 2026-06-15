@@ -1,9 +1,4 @@
-"""TB Futures FastAPI backend.
-
-Serves country statistics, the choropleth map data, model metadata, and runs
-counterfactual simulations against the trained Random Forest. The set of
-covariates and scenarios is data-adaptive and read from the saved schema.
-"""
+"""TB Futures FastAPI backend."""
 
 import json
 import os
@@ -15,12 +10,15 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
 from src.model.country_story import generate_country_story
-from src.model.predict import simulate
+from src.model.predict import prioritize, simulate
 
 DATA_PATH = "data/processed/merged_tb_dataset.csv"
 MODELS_DIR = "models"
+MODEL_CARD_PATH = "docs/MODEL_CARD.md"
+TRAINING_PERIOD = "2000-2018"
+TEST_PERIOD = "2019-2023"
 
-app = FastAPI(title="TB Futures API", version="2.0.0")
+app = FastAPI(title="TB Futures API", version="3.0.0")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -36,6 +34,8 @@ class State:
     schema = None
     metrics = None
     feature_importance = None
+    diagnostics = None
+    model_card = None
 
 
 state = State()
@@ -55,6 +55,12 @@ def _load():
     if state.feature_importance is None:
         with open(os.path.join(MODELS_DIR, "feature_importance.json")) as f:
             state.feature_importance = json.load(f)
+    if state.diagnostics is None:
+        with open(os.path.join(MODELS_DIR, "diagnostics.json")) as f:
+            state.diagnostics = json.load(f)
+    if state.model_card is None:
+        with open(MODEL_CARD_PATH) as f:
+            state.model_card = f.read()
 
 
 @app.on_event("startup")
@@ -72,6 +78,10 @@ def _latest_row(country: str):
     return sub.sort_values("year").iloc[-1]
 
 
+def _latest_country_rows():
+    return state.df.sort_values("year").groupby("country", as_index=False).last()
+
+
 def _num(value):
     try:
         if value is None or pd.isna(value):
@@ -83,7 +93,7 @@ def _num(value):
 
 class SimulationRequest(BaseModel):
     country: str
-    scenario: str  # baseline, vaccine_push, hiv_control, health_boost, income_up, combined, custom
+    scenario: str
     bcg_override: float | None = None
     hiv_override: float | None = None
     gdp_override: float | None = None
@@ -124,7 +134,6 @@ def health():
 
 @app.get("/config")
 def config():
-    """Data-adaptive layout: which covariates and scenarios are available."""
     _load()
     return {
         "covariates": state.schema["covariates"],
@@ -132,6 +141,9 @@ def config():
         "income_levels": state.schema["income_levels"],
         "regions": state.schema["regions"],
         "use_income": state.schema["use_income"],
+        "target_source": state.schema.get("target_source"),
+        "target_display": state.schema.get("target_display"),
+        "target_transform": state.schema.get("target_transform"),
     }
 
 
@@ -149,12 +161,14 @@ def country(country_name: str):
         "country": country_name,
         "year": int(row["year"]),
         "tb_incidence": _num(row.get("tb_incidence")),
+        "tb_target_display": state.schema.get("target_display"),
         "population": _num(row.get("population")),
         "income_level": row.get("income_level") if state.schema["use_income"] else None,
         "region": row.get("region"),
         "country_story": generate_country_story(country_name, row.to_dict()),
+        "rapid_dx_sites": _num(row.get("rapid_dx_sites")),
     }
-    for cov in ("bcg_coverage", "hiv_prevalence", "gdp_per_capita", "health_expenditure"):
+    for cov in ("bcg_coverage", "gdp_per_capita", "hiv_prevalence", "health_expenditure"):
         if cov in row.index:
             out[cov] = _num(row.get(cov))
     return out
@@ -163,7 +177,7 @@ def country(country_name: str):
 @app.post("/simulate", response_model=SimulationResponse)
 def run_simulation(req: SimulationRequest):
     _load()
-    _latest_row(req.country)  # 422 on unknown country
+    _latest_row(req.country)
 
     valid = set(state.schema["scenarios"]) | {"custom"}
     if req.scenario not in valid:
@@ -178,23 +192,27 @@ def run_simulation(req: SimulationRequest):
     }
     overrides = {k: v for k, v in overrides.items() if v is not None}
 
-    return simulate(req.country, req.scenario, overrides, state.df, state.model,
-                    state.schema)
+    return simulate(req.country, req.scenario, overrides, state.df, state.model, state.schema)
 
 
 @app.get("/map-data")
 def map_data():
     _load()
-    latest = state.df.sort_values("year").groupby("country", as_index=False).last()
+    latest = _latest_country_rows()
     out = []
     for _, row in latest.iterrows():
-        out.append({
-            "country": row["country"],
-            "iso3": row["iso3"],
-            "tb_incidence": _num(row.get("tb_incidence")),
-            "bcg_coverage": _num(row.get("bcg_coverage")),
-            "hiv_prevalence": _num(row.get("hiv_prevalence")),
-        })
+        out.append(
+            {
+                "country": row["country"],
+                "iso3": row["iso3"],
+                "tb_incidence": _num(row.get("tb_incidence")),
+                "bcg_coverage": _num(row.get("bcg_coverage")),
+                "gdp_per_capita": _num(row.get("gdp_per_capita")),
+                "rapid_dx_sites": _num(row.get("rapid_dx_sites")),
+                "population": _num(row.get("population")),
+                "region": row.get("region"),
+            }
+        )
     return out
 
 
@@ -207,20 +225,50 @@ def whatif_map(bcg: float = 90.0):
     out = []
     for name in state.df["country"].unique().tolist():
         try:
-            res = simulate(name, "custom", {"bcg_coverage": bcg}, state.df,
-                           state.model, state.schema)
+            res = simulate(
+                name,
+                "custom",
+                {"bcg_coverage": min(bcg, 99.0)},
+                state.df,
+                state.model,
+                state.schema,
+                include_ci=False,
+                include_story=False,
+            )
         except KeyError:
             continue
-        iso3 = state.df[state.df["country"] == name]["iso3"].iloc[-1]
-        out.append({
-            "country": name,
-            "iso3": iso3,
-            "predicted_tb_incidence": res["predicted_tb_incidence"],
-            "current_tb_incidence": res["current_tb_incidence"],
-            "bcg_coverage": res["simulated_bcg_coverage"],
-            "hiv_prevalence": res["current_hiv_prevalence"],
-        })
+        row = _latest_row(name)
+        out.append(
+            {
+                "country": name,
+                "iso3": row["iso3"],
+                "predicted_tb_incidence": res["predicted_tb_incidence"],
+                "current_tb_incidence": res["current_tb_incidence"],
+                "bcg_coverage": res["simulated_bcg_coverage"],
+                "current_bcg_coverage": res["current_bcg_coverage"],
+                "gdp_per_capita": _num(row.get("gdp_per_capita")),
+                "rapid_dx_sites": _num(row.get("rapid_dx_sites")),
+            }
+        )
     return out
+
+
+@app.get("/prioritize")
+def prioritize_view(bcg_target: float = 90.0, top: int = 20):
+    _load()
+    rows = prioritize(state.df, state.model, state.schema, bcg_target=bcg_target, top=top)
+    return {
+        "bcg_target": bcg_target,
+        "top": max(1, int(top)),
+        "target_display": state.schema.get("target_display"),
+        "rows": rows,
+    }
+
+
+@app.get("/prioritization")
+def prioritization(bcg_target: float = 90.0, top: int = 20):
+    """Backward-compatible alias for the ranking endpoint."""
+    return prioritize_view(bcg_target=bcg_target, top=top)
 
 
 @app.get("/model-info")
@@ -229,8 +277,12 @@ def model_info():
     return {
         "metrics": state.metrics,
         "feature_importance": state.feature_importance,
+        "diagnostics": state.diagnostics,
+        "model_card": state.model_card,
         "schema": state.schema,
-        "training_period": "2000-2017",
-        "test_period": "2018-2022",
+        "target_source": state.schema.get("target_source"),
+        "target_display": state.schema.get("target_display"),
+        "training_period": TRAINING_PERIOD,
+        "test_period": TEST_PERIOD,
         "n_countries": int(state.df["country"].nunique()),
     }

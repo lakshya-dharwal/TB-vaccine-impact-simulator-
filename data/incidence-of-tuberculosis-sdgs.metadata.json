@@ -1,0 +1,35 @@
+{
+  "chart": {
+    "title": "Rate of new tuberculosis cases",
+    "subtitle": "Estimated rate of new tuberculosis cases per 100,000 people. This includes both new and latent reactivated infections.",
+    "citation": "WHO (2025); Population based on various sources (2024)",
+    "originalChartUrl": "https://ourworldindata.org/grapher/incidence-of-tuberculosis-sdgs?v=1&csvType=full&useColumnShortNames=false",
+    "selection": [
+      "Africa",
+      "Asia",
+      "Europe",
+      "South America",
+      "North America",
+      "Oceania"
+    ]
+  },
+  "columns": {
+    "Estimated incidence of all forms of tuberculosis": {
+      "titleShort": "Estimated incidence of all forms of tuberculosis",
+      "titleLong": "Estimated incidence of all forms of tuberculosis",
+      "descriptionShort": "The number of new cases of tuberculosis per 100,000 people.",
+      "descriptionProcessing": "Regional aggregates were calculated by Our World in Data.",
+      "unit": "cases per 100,000 people",
+      "timespan": "2000-2024",
+      "type": "Numeric",
+      "owidVariableId": 1146135,
+      "shortName": "e_inc_100k",
+      "lastUpdated": "2026-02-05",
+      "citationShort": "WHO (2025); Population based on various sources (2024) – with minor processing by Our World in Data",
+      "citationLong": "WHO (2025); Population based on various sources (2024) – with minor processing by Our World in Data. “Estimated incidence of all forms of tuberculosis” [dataset]. WHO, “Global Tuberculosis Report - Burden Estimates”; Various sources, “Population” [original data].",
+      "fullMetadata": "https://api.ourworldindata.org/v1/indicators/1146135.metadata.json"
+    }
+  },
+  "dateDownloaded": "2026-06-14",
+  "activeFilters": {}
+}

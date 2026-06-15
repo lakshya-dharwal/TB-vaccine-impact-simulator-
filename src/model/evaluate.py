@@ -1,4 +1,4 @@
-"""Evaluate the saved TB Futures models on the held-out test set (2018-2022)."""
+"""Evaluate the saved TB Futures models on the held-out test set."""
 
 import json
 import os
@@ -18,7 +18,7 @@ from src.model.features import build_feature_matrix
 DATA_PATH = "data/processed/merged_tb_dataset.csv"
 MODELS_DIR = "models"
 TARGET = "tb_incidence"
-TRAIN_END = 2017
+TRAIN_END = 2018
 
 
 def _metrics(y_true, y_pred):
@@ -29,25 +29,36 @@ def _metrics(y_true, y_pred):
     }
 
 
+def _predict(model, X, log_target: bool):
+    pred = model.predict(X)
+    return np.maximum(np.expm1(pred), 0.0) if log_target else np.maximum(pred, 0.0)
+
+
 def main():
-    df = pd.read_csv(DATA_PATH)
+    df = pd.read_csv(DATA_PATH).sort_values(["year", "country"]).reset_index(drop=True)
     with open(os.path.join(MODELS_DIR, "schema.json")) as f:
         schema = json.load(f)
+    log_target = bool(schema.get("log_target"))
+
     test_df = df[df["year"] > TRAIN_END].copy()
     X_test = build_feature_matrix(test_df, schema)
     y_test = test_df[TARGET].values
 
-    rf = joblib.load(os.path.join(MODELS_DIR, "rf_model.pkl"))
-    lr = joblib.load(os.path.join(MODELS_DIR, "lr_model.pkl"))
-
-    rf_m = _metrics(y_test, rf.predict(X_test))
-    lr_m = _metrics(y_test, lr.predict(X_test))
+    models = {
+        "Random Forest": joblib.load(os.path.join(MODELS_DIR, "rf_model.pkl")),
+        "Linear Regression": joblib.load(os.path.join(MODELS_DIR, "lr_model.pkl")),
+        "Gradient Boosting": joblib.load(os.path.join(MODELS_DIR, "gbm_model.pkl")),
+    }
 
     print("=" * 50)
-    print(f"Evaluation on held-out test set ({TRAIN_END + 1}-2022)")
+    print(f"Evaluation on held-out test set ({TRAIN_END + 1}-2023)")
     print("=" * 50)
-    print(f"Test rows: {len(X_test)}\n")
-    for label, m in [("Random Forest", rf_m), ("Linear Regression", lr_m)]:
+    print(f"Test rows: {len(X_test)}")
+    print(f"Target transform: {'log1p' if log_target else 'none'}\n")
+
+    for label, model in models.items():
+        pred = _predict(model, X_test, log_target)
+        m = _metrics(y_test, pred)
         print(f"{label:>18}:  R2={m['r2']:.3f}  MAE={m['mae']:.2f}  RMSE={m['rmse']:.2f}")
 
     with open(os.path.join(MODELS_DIR, "model_metrics.json")) as f:
