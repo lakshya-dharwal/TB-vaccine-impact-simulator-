@@ -1,0 +1,44 @@
+{
+  "chart": {
+    "title": "Share of newborns vaccinated against tuberculosis",
+    "subtitle": "Share of newborns who have received the Bacillus Calmette-Guérin (BCG) vaccine against tuberculosis. This is calculated only for countries where the vaccine is recommended for all newborns, typically where there is higher TB incidence.",
+    "note": "Coverage estimates include only countries where the WHO recommends vaccination for all newborns. Tuberculosis (TB) is a bacterial infection that primarily affects the lungs but can also affect other parts of the body. It is the leading infectious cause of death worldwide.",
+    "citation": "WHO & UNICEF (2025); UN, World Population Prospects (2024)",
+    "originalChartUrl": "https://ourworldindata.org/grapher/bcg-immunization-coverage-for-tb-among-1-year-olds?v=1&csvType=full&useColumnShortNames=false",
+    "selection": [
+      "African Region (WHO)",
+      "European Region (WHO)",
+      "Region of the Americas (WHO)",
+      "South-East Asia Region (WHO)",
+      "Western Pacific Region (WHO)",
+      "Eastern Mediterranean Region (WHO)",
+      "World"
+    ]
+  },
+  "columns": {
+    "Share of newborns vaccinated against tuberculosis": {
+      "titleShort": "Share of newborns vaccinated against tuberculosis",
+      "titleLong": "Share of newborns vaccinated against tuberculosis",
+      "descriptionShort": "Share of newborns who have had one dose of the tuberculosis (BCG) vaccine in a given year.",
+      "descriptionKey": [
+        "The WHO recommends BCG vaccination at birth for all newborns in countries or settings with a high incidence of TB and/or high leprosy burden. Countries with low TB incidence or leprosy burden may choose to selectively vaccinate newborns in high-risk groups.",
+        "This chart shows official estimates of national immunization coverage published by the WHO and UNICEF. The estimates include all WHO member states, even those that did not report 2023 data. For non-reporting countries, WHO uses statistical methods to extrapolate from previously reported data, ensuring global coverage can be assessed.",
+        "Global and regional vaccination coverage is calculated using population-weighted averages. In 2023, approximately 5% of countries did not report data, requiring extrapolation from their 2022 data to maintain complete global estimates.",
+        "These estimates combine several sources: official administrative data from health facilities, coverage surveys that meet WHO quality standards, and other relevant information like vaccine supply issues or schedule changes. The accuracy of these estimates depends on how complete and reliable each country’s reporting systems are."
+      ],
+      "shortUnit": "%",
+      "unit": "%",
+      "timespan": "1980-2024",
+      "type": "Integer",
+      "owidVariableId": 1077433,
+      "shortName": "coverage__antigen_bcg",
+      "lastUpdated": "2025-07-15",
+      "nextUpdate": "2026-07-15",
+      "citationShort": "WHO & UNICEF (2025); UN, World Population Prospects (2024) – processed by Our World in Data",
+      "citationLong": "WHO & UNICEF (2025); UN, World Population Prospects (2024) – processed by Our World in Data. “Share of newborns vaccinated against tuberculosis” [dataset]. WHO & UNICEF, “WHO Immunization Data - Vaccination coverage”; United Nations, “World Population Prospects”; United Nations, “World Population Prospects - Interim Update” [original data].",
+      "fullMetadata": "https://api.ourworldindata.org/v1/indicators/1077433.metadata.json"
+    }
+  },
+  "dateDownloaded": "2026-06-14",
+  "activeFilters": {}
+}
