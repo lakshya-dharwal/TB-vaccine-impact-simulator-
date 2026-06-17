@@ -1,4 +1,4 @@
-"""Evaluate the saved TB Futures models on the held-out test set (2018-2022)."""
+"""Evaluate the saved TB Futures models on the held-out test set (2018-2023)."""
 
 import json
 import os
@@ -10,7 +10,6 @@ import numpy as np
 import pandas as pd
 from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 
-# Allow running as a script (`python src/model/evaluate.py`) as well as a module.
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 from src.model.features import build_feature_matrix
@@ -22,8 +21,10 @@ TRAIN_END = 2017
 
 
 def _metrics(y_true, y_pred):
+    y_pred = np.clip(y_pred, 0, None)
     return {
         "r2": float(r2_score(y_true, y_pred)),
+        "r2_log": float(r2_score(np.log1p(y_true), np.log1p(y_pred))),
         "mae": float(mean_absolute_error(y_true, y_pred)),
         "rmse": float(np.sqrt(mean_squared_error(y_true, y_pred))),
     }
@@ -33,27 +34,38 @@ def main():
     df = pd.read_csv(DATA_PATH)
     with open(os.path.join(MODELS_DIR, "schema.json")) as f:
         schema = json.load(f)
+    log_target = schema.get("log_target", False)
+
     test_df = df[df["year"] > TRAIN_END].copy()
     X_test = build_feature_matrix(test_df, schema)
     y_test = test_df[TARGET].values
 
-    rf = joblib.load(os.path.join(MODELS_DIR, "rf_model.pkl"))
-    lr = joblib.load(os.path.join(MODELS_DIR, "lr_model.pkl"))
+    print("=" * 60)
+    print(f"Evaluation on held-out test set ({TRAIN_END + 1}-2023) | rows: {len(X_test)}")
+    print("=" * 60)
+    for fname, label in [("rf_model.pkl", "Random Forest"),
+                         ("lr_model.pkl", "Linear Regression"),
+                         ("gbm_model.pkl", "Gradient Boosting")]:
+        path = os.path.join(MODELS_DIR, fname)
+        if not os.path.exists(path):
+            continue
+        pred = joblib.load(path).predict(X_test)
+        if log_target:
+            pred = np.expm1(pred)
+        m = _metrics(y_test, pred)
+        print(f"{label:>18}:  R2={m['r2']:.3f}  R2(log)={m['r2_log']:.3f}  "
+              f"MAE={m['mae']:.2f}  RMSE={m['rmse']:.2f}")
 
-    rf_m = _metrics(y_test, rf.predict(X_test))
-    lr_m = _metrics(y_test, lr.predict(X_test))
-
-    print("=" * 50)
-    print(f"Evaluation on held-out test set ({TRAIN_END + 1}-2022)")
-    print("=" * 50)
-    print(f"Test rows: {len(X_test)}\n")
-    for label, m in [("Random Forest", rf_m), ("Linear Regression", lr_m)]:
-        print(f"{label:>18}:  R2={m['r2']:.3f}  MAE={m['mae']:.2f}  RMSE={m['rmse']:.2f}")
-
-    with open(os.path.join(MODELS_DIR, "model_metrics.json")) as f:
-        saved = json.load(f)
-    print("\nSaved metrics on file:")
-    print(json.dumps(saved, indent=2))
+    diag_path = os.path.join(MODELS_DIR, "diagnostics.json")
+    if os.path.exists(diag_path):
+        with open(diag_path) as f:
+            diag = json.load(f)
+        print("\nRandom Forest mean abs error by region:")
+        for k, v in sorted(diag["mae_by_region"].items()):
+            print(f"  {k:<6} {v}")
+        print("Mean abs error by income band:")
+        for k, v in sorted(diag["mae_by_income"].items()):
+            print(f"  {k:<6} {v}")
 
 
 if __name__ == "__main__":

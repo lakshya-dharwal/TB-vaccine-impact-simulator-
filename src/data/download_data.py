@@ -1,63 +1,61 @@
-"""Download the optional OWID covariate datasets for TB Futures.
+"""(Optional) refresh the OWID source datasets used by TB Futures.
 
-The TB target, population, region, and income level all come from
-data/raw/who_tb_data_merged.csv (tracked in the repository). Everything below is
-OPTIONAL: each covariate is merged in by process_data.py only if its file ends
-up in data/raw/. If a download fails (e.g. behind a network egress allowlist),
-the exact URL is printed so it can be fetched manually and dropped into
-data/raw/. The pipeline simply skips any covariate whose file is absent.
+The source data is already committed under data/, so this script is only needed to
+refresh it from Our World in Data. It writes the five OWID grapher CSVs into data/
+using the same filenames process_data.py expects. The WHO notifications file
+(who_tb_data_merged.csv) is maintained separately in the repo.
+
+If a download fails (e.g. behind a network egress allowlist), the exact URL is
+printed so it can be fetched manually.
 """
 
 import os
 
 import requests
 
-os.makedirs("data/raw", exist_ok=True)
+os.makedirs("data", exist_ok=True)
 
-bcg_url = "https://ourworldindata.org/grapher/bcg-immunization-coverage-for-tb-among-1-year-olds.csv?v=1&csvType=full&useColumnShortNames=true"
-hiv_url = "https://ourworldindata.org/grapher/share-of-population-with-hiv.csv?v=1&csvType=full&useColumnShortNames=true"
-gdp_url = "https://ourworldindata.org/grapher/gdp-per-capita-worldbank.csv?v=1&csvType=full&useColumnShortNames=true"
-health_url = "https://ourworldindata.org/grapher/health-expenditure-and-financing.csv?v=1&csvType=full&useColumnShortNames=true"
-
-urls = {
-    "bcg_coverage.csv": bcg_url,
-    "hiv_prevalence.csv": hiv_url,
-    "gdp_per_capita.csv": gdp_url,
-    "health_expenditure.csv": health_url,
-}
+BASE = "https://ourworldindata.org/grapher/{slug}.csv?v=1&csvType=full&useColumnShortNames=true"
+SLUGS = [
+    "incidence-of-tuberculosis-sdgs",
+    "bcg-immunization-coverage-for-tb-among-1-year-olds",
+    "gdp-per-capita-worldbank",
+    "population",
+    "sites-providing-rapid-tuberculosis-diagnostics-per-million-people",
+]
 
 headers = {"User-Agent": "Mozilla/5.0"}
 
 
 def main():
     failures = []
-    for filename, url in urls.items():
-        print(f"Downloading {filename}...")
+    for slug in SLUGS:
+        url = BASE.format(slug=slug)
+        dest = f"data/{slug}.csv"
+        print(f"Downloading {slug}.csv ...")
         try:
-            response = requests.get(url, headers=headers, timeout=30)
+            r = requests.get(url, headers=headers, timeout=30)
         except requests.RequestException as exc:
-            print(f"FAILED {filename} — {exc}")
-            failures.append((filename, url))
+            print(f"FAILED {slug} — {exc}")
+            failures.append((dest, url))
             continue
-        if response.status_code == 200:
-            with open(f"data/raw/{filename}", "wb") as f:
-                f.write(response.content)
-            print(f"Saved {filename}")
+        if r.status_code == 200:
+            with open(dest, "wb") as f:
+                f.write(r.content)
+            print(f"Saved {dest}")
         else:
-            print(f"FAILED {filename} — status {response.status_code}")
-            failures.append((filename, url))
+            print(f"FAILED {slug} — status {r.status_code}")
+            failures.append((dest, url))
 
     if failures:
         print("\n" + "=" * 70)
-        print("Some downloads failed. Download each URL below in a browser and save")
-        print("it with the given name into data/raw/. Any covariate you skip is simply")
-        print("left out of the model — that is fine.\n")
-        for filename, url in failures:
-            print(f"  {filename}\n    {url}\n")
+        print("Some downloads failed. Fetch each URL in a browser and save to the path:")
+        for dest, url in failures:
+            print(f"  {dest}\n    {url}\n")
         print("If sandboxed, add 'ourworldindata.org' to your network egress allowlist.")
         print("=" * 70)
     else:
-        print("\nAll optional covariate datasets downloaded into data/raw/.")
+        print("\nAll source datasets refreshed into data/.")
 
 
 if __name__ == "__main__":

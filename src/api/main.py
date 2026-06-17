@@ -15,7 +15,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
 from src.model.country_story import generate_country_story
-from src.model.predict import simulate
+from src.model.predict import prioritize, simulate
 
 DATA_PATH = "data/processed/merged_tb_dataset.csv"
 MODELS_DIR = "models"
@@ -36,9 +36,15 @@ class State:
     schema = None
     metrics = None
     feature_importance = None
+    diagnostics = None
 
 
 state = State()
+
+
+def _load_json(name):
+    with open(os.path.join(MODELS_DIR, name)) as f:
+        return json.load(f)
 
 
 def _load():
@@ -47,14 +53,16 @@ def _load():
     if state.model is None:
         state.model = joblib.load(os.path.join(MODELS_DIR, "rf_model.pkl"))
     if state.schema is None:
-        with open(os.path.join(MODELS_DIR, "schema.json")) as f:
-            state.schema = json.load(f)
+        state.schema = _load_json("schema.json")
     if state.metrics is None:
-        with open(os.path.join(MODELS_DIR, "model_metrics.json")) as f:
-            state.metrics = json.load(f)
+        state.metrics = _load_json("model_metrics.json")
     if state.feature_importance is None:
-        with open(os.path.join(MODELS_DIR, "feature_importance.json")) as f:
-            state.feature_importance = json.load(f)
+        state.feature_importance = _load_json("feature_importance.json")
+    if state.diagnostics is None:
+        try:
+            state.diagnostics = _load_json("diagnostics.json")
+        except FileNotFoundError:
+            state.diagnostics = {}
 
 
 @app.on_event("startup")
@@ -154,7 +162,8 @@ def country(country_name: str):
         "region": row.get("region"),
         "country_story": generate_country_story(country_name, row.to_dict()),
     }
-    for cov in ("bcg_coverage", "hiv_prevalence", "gdp_per_capita", "health_expenditure"):
+    for cov in ("bcg_coverage", "hiv_prevalence", "gdp_per_capita",
+                "health_expenditure", "rapid_dx_sites"):
         if cov in row.index:
             out[cov] = _num(row.get(cov))
     return out
@@ -194,6 +203,8 @@ def map_data():
             "tb_incidence": _num(row.get("tb_incidence")),
             "bcg_coverage": _num(row.get("bcg_coverage")),
             "hiv_prevalence": _num(row.get("hiv_prevalence")),
+            "gdp_per_capita": _num(row.get("gdp_per_capita")),
+            "rapid_dx_sites": _num(row.get("rapid_dx_sites")),
         })
     return out
 
@@ -223,14 +234,26 @@ def whatif_map(bcg: float = 90.0):
     return out
 
 
+@app.get("/prioritize")
+def prioritize_countries(bcg_target: float = 90.0, top: int = 25):
+    """Rank countries by estimated TB cases prevented per year under a BCG target."""
+    _load()
+    if "bcg_coverage" not in state.schema["numeric"]:
+        raise HTTPException(status_code=404, detail="BCG coverage is not in this model.")
+    ranked = prioritize(state.df, state.model, state.schema, bcg_target=bcg_target,
+                        top=top)
+    return {"bcg_target": bcg_target, "countries": ranked}
+
+
 @app.get("/model-info")
 def model_info():
     _load()
     return {
         "metrics": state.metrics,
         "feature_importance": state.feature_importance,
+        "diagnostics": state.diagnostics,
         "schema": state.schema,
         "training_period": "2000-2017",
-        "test_period": "2018-2022",
+        "test_period": "2018-2023",
         "n_countries": int(state.df["country"].nunique()),
     }

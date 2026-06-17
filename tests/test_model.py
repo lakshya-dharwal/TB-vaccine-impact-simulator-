@@ -76,3 +76,19 @@ def test_all_scenarios_run_for_several_countries(df, model, schema):
         for scenario in schema["scenarios"]:
             result = simulate(country, scenario, {}, df, model, schema)
             assert result["predicted_tb_incidence"] >= 0
+
+
+def test_baseline_is_anchored(df, model, schema):
+    # Counterfactual anchoring: with no change, predicted == observed current.
+    country = _some_countries(df, 1)[0]
+    result = simulate(country, "baseline", {}, df, model, schema)
+    assert abs(result["absolute_reduction"]) < 1e-6
+    assert result["current_tb_incidence"] == result["predicted_tb_incidence"]
+
+
+def test_prioritize_is_sorted_descending(df, model, schema):
+    from src.model.predict import prioritize
+    ranked = prioritize(df, model, schema, bcg_target=90.0, top=10)
+    assert 0 < len(ranked) <= 10
+    prevented = [r["cases_prevented_per_year"] for r in ranked]
+    assert prevented == sorted(prevented, reverse=True)

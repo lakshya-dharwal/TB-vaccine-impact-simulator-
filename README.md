@@ -32,28 +32,39 @@ the estimated change in TB burden — with a model-uncertainty interval and a cl
 
 | Scenario | What it does |
 |----------|--------------|
-| **Baseline** | No changes |
+| **Baseline** | No changes (anchored to the country's observed incidence) |
 | **Vaccine Push** | BCG coverage +30 percentage points (capped at 99%) |
-| **HIV Control** | HIV prevalence × 0.75 |
-| **Income Level Up** | Bump income band up one tier (L → LM → UM → H) |
-| **Combined** | All three of the above together |
-| **Custom** | Override BCG, HIV, and income level individually |
+| **Economic Development** | GDP per capita × 1.25 |
+| **Combined** | Both of the above together |
+| **Custom** | Override BCG coverage and GDP individually |
+
+Income level and WHO region are model **features/context**, not intervention levers
+(a one-tier income jump is not a credible, graded what-if).
+
+The **Prioritization** view ranks countries by estimated TB cases prevented per year if
+BCG coverage were raised to a target — burden × population × the coverage gap — as a guide
+to where vaccination investment could matter most.
 
 ---
 
 ## The ML Model
 
-- **Type:** Random Forest Regressor (with a Linear Regression baseline for comparison)
-- **Features:** BCG coverage, HIV prevalence, year, one-hot income level (L/LM/UM/H),
-  one-hot WHO region
-- **Target:** TB incidence per 100,000 population, derived as
-  `c_newinc / population_size × 100,000` from the WHO notifications file
-- **Split:** Temporal — train 2000–2017, test 2018–2022 (held out)
-- **Uncertainty:** Bootstrap over the forest's trees (exactly 100 resamples), reporting
-  the 2.5th–97.5th percentile as a 95% model-uncertainty interval
+- **Type:** tuned Random Forest Regressor, with Linear Regression and Gradient Boosting
+  baselines.
+- **Features:** BCG coverage, log(GDP per capita), year, one-hot income level (L/LM/UM/H),
+  one-hot WHO region.
+- **Target:** **WHO estimated TB incidence per 100,000** (OWID SDG series), modelled in
+  log space (`log1p`/`expm1`) because the target is right-skewed.
+- **Tuning:** randomized search over forest hyperparameters with 5-fold year-grouped
+  cross-validation. **Split:** temporal — train 2000–2017, test 2018–2023 (held out).
+- **Counterfactual:** the model estimates the *change* between a country's baseline and
+  the intervention (both predicted by the model, so baseline error cancels), and applies
+  that change to the real observed incidence.
+- **Uncertainty:** bootstrap over the forest's trees (exactly 100 resamples), 2.5th–97.5th
+  percentile, in original units.
 
-The simulation is a counterfactual: a country's most recent feature vector is taken and
-only the chosen factors are modified; all else stays at real-world values.
+See [`docs/MODEL_CARD.md`](docs/MODEL_CARD.md) for metrics and limitations, and
+[`docs/DATA.md`](docs/DATA.md) for the data dictionary.
 
 ---
 
@@ -100,7 +111,8 @@ TB-Futures/
 
 ### Prerequisites
 - Python 3.11+
-- Network access to `ourworldindata.org` (for the data download step)
+- The source data is already committed (`data/` and `who_tb_data_merged.csv`), so no
+  download is needed.
 
 ### Run order
 
@@ -111,20 +123,16 @@ pip install -r requirements.txt
 # Run scripts from the repo root. The `python -m` form is canonical; the plain
 # `python src/...` form also works.
 
-# 2. Download optional covariates (BCG/HIV/GDP/health) from OWID into data/raw/
-#    (who_tb_data_merged.csv must already be in data/raw/)
-python -m src.data.download_data
-
-# 3. Process and merge whatever sources are present -> data/processed/merged_tb_dataset.csv
+# 2. Process and merge the committed sources -> data/processed/merged_tb_dataset.csv
 python -m src.data.process_data
 
-# 4. Train the models (writes models/*.pkl + metadata)
+# 3. Train the models (writes models/*.pkl + metadata + docs/MODEL_CARD.md)
 python -m src.model.train
 
-# 5. Evaluate on the held-out test set
+# 4. Evaluate on the held-out test set
 python -m src.model.evaluate
 
-# 6. Start the API (terminal 1)
+# 5. Start the API (terminal 1)
 uvicorn src.api.main:app --reload --port 8000
 
 # 7. Start the frontend (terminal 2)
@@ -170,12 +178,14 @@ dataset, trains the model, runs the test suite, and builds the Docker image on e
 | Method | Endpoint | Description |
 |--------|----------|-------------|
 | GET | `/health` | Liveness check |
+| GET | `/config` | Data-adaptive covariates + available scenarios |
 | GET | `/countries` | Sorted list of country names |
 | GET | `/country/{name}` | Most-recent-year stats + country story |
 | POST | `/simulate` | Run a scenario simulation |
-| GET | `/map-data` | Per-country TB / BCG / HIV for the choropleth |
+| GET | `/map-data` | Per-country TB / BCG / GDP / detection for the choropleth |
 | GET | `/whatif-map?bcg=90` | Predicted TB burden at a uniform BCG level |
-| GET | `/model-info` | Model metrics + feature importance |
+| GET | `/prioritize?bcg_target=90&top=25` | Countries ranked by cases prevented |
+| GET | `/model-info` | Model metrics, feature importance, diagnostics |
 
 **POST /simulate request**
 
@@ -183,20 +193,21 @@ dataset, trains the model, runs the test suite, and builds the Docker image on e
 { "country": "Nigeria", "scenario": "combined" }
 ```
 
-Optional overrides: `bcg_override`, `hiv_override`, `income_override` (L/LM/UM/H),
-used with `"scenario": "custom"`.
+Optional overrides: `bcg_override`, `gdp_override`, used with `"scenario": "custom"`.
 
 ---
 
 ## Data Sources
 
-- WHO Global Tuberculosis Programme — notifications (`c_newinc`), `population_size`,
-  `income_level`, and WHO region (`who_tb_data_merged.csv`)
-- WHO / UNICEF WUENIC Immunization Coverage Estimates (BCG)
-- Our World in Data — BCG coverage and HIV prevalence
-- World Bank income classification / UNAIDS
+- **TB incidence (target)** — WHO estimate via Our World in Data
+  (`incidence-of-tuberculosis-sdgs`)
+- **BCG coverage** — WHO/UNICEF via OWID
+- **GDP per capita** — World Bank via OWID
+- **Population** — OWID
+- **Income band + WHO region** — WHO Global TB Programme (`who_tb_data_merged.csv`)
+- **Rapid TB diagnostic sites** — WHO (context layer only; sparse 2020–2023)
 
-All data is publicly available and free to access.
+All data is publicly available and free to access. See [`docs/DATA.md`](docs/DATA.md).
 
 ---
 

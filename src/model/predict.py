@@ -1,8 +1,4 @@
-"""Counterfactual simulation and bootstrap uncertainty for TB Futures.
-
-Scenarios and covariates adapt to the trained schema: a lever is only applied
-if its covariate was part of the model.
-"""
+"""Counterfactual simulation, bootstrap uncertainty, and prioritisation."""
 
 import numpy as np
 
@@ -10,7 +6,7 @@ from src.model.country_story import (
     generate_country_story,
     generate_scenario_explanation,
 )
-from src.model.features import build_feature_vector, income_up, vector_to_frame
+from src.model.features import build_feature_vector, vector_to_frame
 
 DISCLAIMER = (
     "Predictions are model estimates based on historical population-level data. "
@@ -38,31 +34,34 @@ def _apply_scenario(values: dict, scenario: str, schema: dict) -> dict:
         v["hiv_prevalence"] = (v.get("hiv_prevalence") or 0) * 0.75
     if scenario in ("health_boost", "combined") and "health_expenditure" in numeric:
         v["health_expenditure"] = (v.get("health_expenditure") or 0) * 1.25
-    if scenario in ("income_up", "combined") and schema["use_income"]:
-        v["income_level"] = income_up(v.get("income_level"))
+    if scenario in ("econ_dev", "combined") and "log_gdp" in numeric:
+        v["gdp_per_capita"] = (v.get("gdp_per_capita") or 0) * 1.25
     return v
 
 
-def _bootstrap_ci(model, feature_frame):
-    """95% interval from resampling the forest's trees 100 times."""
+def _predict_with_ci(model, frame, log_target):
+    """Point prediction and 95% interval (100 tree-bootstraps) in original units."""
     estimators = getattr(model, "estimators_", None)
     if not estimators:
-        point = float(model.predict(feature_frame)[0])
-        return point, point
+        point = float(model.predict(frame)[0])
+        if log_target:
+            point = float(np.expm1(point))
+        point = max(point, 0.0)
+        return point, point, point
 
-    rng = np.random.default_rng(42)
-    n = len(estimators)
-    values = feature_frame.values
+    values = frame.values
     tree_preds = np.array([est.predict(values)[0] for est in estimators])
+    if log_target:
+        tree_preds = np.expm1(tree_preds)
+    tree_preds = np.clip(tree_preds, 0, None)
 
-    boot_means = []
-    for _ in range(N_BOOTSTRAP):
-        idx = rng.integers(0, n, size=n)
-        boot_means.append(float(np.mean(tree_preds[idx])))
-
-    lower = float(np.percentile(boot_means, 2.5))
-    upper = float(np.percentile(boot_means, 97.5))
-    return max(lower, 0.0), max(upper, 0.0)
+    point = float(tree_preds.mean())
+    rng = np.random.default_rng(42)
+    n = len(tree_preds)
+    boot = [float(tree_preds[rng.integers(0, n, size=n)].mean())
+            for _ in range(N_BOOTSTRAP)]
+    return point, max(float(np.percentile(boot, 2.5)), 0.0), \
+        max(float(np.percentile(boot, 97.5)), 0.0)
 
 
 def _round(value, ndigits=1):
@@ -72,6 +71,7 @@ def _round(value, ndigits=1):
 def simulate(country, scenario, custom_overrides, df, model, schema):
     """Run a counterfactual simulation and return a full result dict."""
     row = get_country_row(df, country)
+    log_target = schema.get("log_target", False)
 
     current_tb = float(row.get("tb_incidence") or 0)
     population = float(row.get("population") or 0)
@@ -85,10 +85,8 @@ def simulate(country, scenario, custom_overrides, df, model, schema):
         "year": row.get("year"),
         "region": row.get("region"),
     }
-
     modified = _apply_scenario(base_values, scenario, schema)
 
-    # Individual overrides take precedence over the scenario (present covariates only).
     if custom_overrides:
         for key in ("bcg_coverage", "hiv_prevalence", "gdp_per_capita",
                     "health_expenditure", "income_level"):
@@ -96,11 +94,19 @@ def simulate(country, scenario, custom_overrides, df, model, schema):
             if val is not None:
                 modified[key] = val if key == "income_level" else float(val)
 
-    features = build_feature_vector(modified, schema)
-    frame = vector_to_frame(features, schema)
+    # Counterfactual anchoring: the model estimates the CHANGE from the country's
+    # own baseline (both predicted by the model, so model error cancels), and that
+    # change is applied to the real observed incidence. This isolates the
+    # intervention effect instead of conflating it with the model's baseline error.
+    base_frame = vector_to_frame(build_feature_vector(base_values, schema), schema)
+    mod_frame = vector_to_frame(build_feature_vector(modified, schema), schema)
+    base_point, _, _ = _predict_with_ci(model, base_frame, log_target)
+    mod_point, mod_lo, mod_hi = _predict_with_ci(model, mod_frame, log_target)
 
-    predicted = max(float(model.predict(frame)[0]), 0.0)
-    ci_lower, ci_upper = _bootstrap_ci(model, frame)
+    delta = mod_point - base_point  # negative = reduction
+    predicted = max(current_tb + delta, 0.0)
+    ci_lower = max(predicted + (mod_lo - mod_point), 0.0)
+    ci_upper = max(predicted + (mod_hi - mod_point), 0.0)
 
     absolute_reduction = current_tb - predicted
     relative_reduction_pct = (
@@ -111,7 +117,6 @@ def simulate(country, scenario, custom_overrides, df, model, schema):
     numeric = schema["numeric"]
 
     def cov(key, current):
-        """Current/simulated pair for a covariate, None when not modelled."""
         if key == "income_level":
             present = schema["use_income"]
         else:
@@ -121,19 +126,14 @@ def simulate(country, scenario, custom_overrides, df, model, schema):
         sim = modified.get(key)
         if key == "income_level":
             return current, sim
-        return _round(current, 2 if key in ("hiv_prevalence", "health_expenditure") else 1), \
-            _round(sim, 2 if key in ("hiv_prevalence", "health_expenditure") else 1)
+        nd = 2 if key in ("hiv_prevalence", "health_expenditure") else 1
+        return _round(current, nd), _round(sim, nd)
 
     cur_bcg, sim_bcg = cov("bcg_coverage", row.get("bcg_coverage"))
     cur_hiv, sim_hiv = cov("hiv_prevalence", row.get("hiv_prevalence"))
     cur_gdp, sim_gdp = cov("gdp_per_capita", row.get("gdp_per_capita"))
     cur_health, sim_health = cov("health_expenditure", row.get("health_expenditure"))
     cur_income, sim_income = cov("income_level", row.get("income_level"))
-
-    story = generate_country_story(country, row)
-    explanation = generate_scenario_explanation(
-        country, scenario, current_tb, predicted, cases_prevented_per_year
-    )
 
     return {
         "country": country,
@@ -156,7 +156,38 @@ def simulate(country, scenario, custom_overrides, df, model, schema):
         "ci_upper": round(ci_upper, 1),
         "population": population,
         "cases_prevented_per_year": round(cases_prevented_per_year, 0),
-        "country_story": story,
-        "scenario_explanation": explanation,
+        "country_story": generate_country_story(country, row),
+        "scenario_explanation": generate_scenario_explanation(
+            country, scenario, current_tb, predicted, cases_prevented_per_year),
         "disclaimer": DISCLAIMER,
     }
+
+
+def prioritize(df, model, schema, bcg_target=90.0, top=None):
+    """Rank countries by estimated TB cases prevented per year under a BCG target.
+
+    For each country the most recent year's BCG coverage is raised to `bcg_target`
+    (only where that is an increase) and the resulting reduction in predicted
+    incidence is converted to cases prevented using population.
+    """
+    rows = []
+    for country in df["country"].unique():
+        latest = df[df["country"] == country].sort_values("year").iloc[-1]
+        current_bcg = float(latest.get("bcg_coverage") or 0)
+        res = simulate(country, "custom", {"bcg_coverage": max(current_bcg, bcg_target)},
+                       df, model, schema)
+        rows.append({
+            "country": country,
+            "iso3": latest["iso3"],
+            "region": latest.get("region"),
+            "income_level": latest.get("income_level"),
+            "current_bcg_coverage": res["current_bcg_coverage"],
+            "target_bcg_coverage": round(max(current_bcg, bcg_target), 1),
+            "current_tb_incidence": res["current_tb_incidence"],
+            "predicted_tb_incidence": res["predicted_tb_incidence"],
+            "relative_reduction_pct": res["relative_reduction_pct"],
+            "population": res["population"],
+            "cases_prevented_per_year": max(res["cases_prevented_per_year"], 0),
+        })
+    rows.sort(key=lambda r: r["cases_prevented_per_year"], reverse=True)
+    return rows[:top] if top else rows

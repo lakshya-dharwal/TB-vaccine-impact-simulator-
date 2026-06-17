@@ -139,18 +139,83 @@ def importance_figure(importance: dict):
 
 
 def model_compare_figure(metrics: dict):
+    names, vals, colors = [], [], []
+    for key, label, color in [("rf", "Random Forest", ORANGE),
+                              ("gbm", "Gradient Boosting", "#FDBA74"),
+                              ("lr", "Linear Regression", GRAY)]:
+        if key in metrics and isinstance(metrics[key], dict):
+            names.append(label)
+            vals.append(metrics[key]["r2"])
+            colors.append(color)
     fig = go.Figure(
-        go.Bar(
-            x=["Random Forest", "Linear Regression"],
-            y=[metrics["rf"]["r2"], metrics["lr"]["r2"]],
-            marker_color=[ORANGE, GRAY],
-            text=[f"{metrics['rf']['r2']:.3f}", f"{metrics['lr']['r2']:.3f}"],
-            textposition="outside",
-            hovertemplate="%{x}: R²=%{y:.3f}<extra></extra>",
-        )
+        go.Bar(x=names, y=vals, marker_color=colors,
+               text=[f"{v:.3f}" for v in vals], textposition="outside",
+               hovertemplate="%{x}: R²=%{y:.3f}<extra></extra>")
     )
-    _clean_layout(fig, height=300, title="Model Comparison (R²)")
+    _clean_layout(fig, height=300, title="Model Comparison — test R² (original scale)")
     fig.update_yaxes(title="R²", visible=True)
+    return fig
+
+
+def residual_figure(diagnostics: dict):
+    """Predicted vs actual TB incidence on the held-out test set."""
+    yt = diagnostics.get("y_true", [])
+    yp = diagnostics.get("y_pred", [])
+    hi = max(yt + yp + [1])
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(
+        x=yt, y=yp, mode="markers",
+        marker=dict(color=ORANGE, size=6, opacity=0.5),
+        hovertemplate="actual %{x:.0f}<br>predicted %{y:.0f}<extra></extra>",
+        name="countries"))
+    fig.add_trace(go.Scatter(x=[0, hi], y=[0, hi], mode="lines",
+                             line=dict(color=GRAY, dash="dash"), name="perfect"))
+    _clean_layout(fig, height=340, title="Predicted vs Actual (held-out test set)")
+    fig.update_xaxes(title="Actual TB / 100k", visible=True)
+    fig.update_yaxes(title="Predicted TB / 100k", visible=True)
+    fig.update_layout(showlegend=False)
+    return fig
+
+
+def prioritization_bar(countries: list):
+    """Horizontal bar of estimated cases prevented per year, top first."""
+    top = countries[:15][::-1]
+    fig = go.Figure(go.Bar(
+        x=[c["cases_prevented_per_year"] for c in top],
+        y=[c["country"] for c in top], orientation="h", marker_color=ORANGE,
+        hovertemplate="%{y}: ~%{x:,.0f} cases/yr<extra></extra>"))
+    _clean_layout(fig, height=460,
+                  title="Estimated TB cases prevented per year under the BCG target")
+    fig.update_xaxes(title="Cases prevented / year", visible=True)
+    return fig
+
+
+REGION_COLORS = {
+    "AFR": "#DC2626", "AMR": "#2563EB", "EMR": "#F97316",
+    "EUR": "#16A34A", "SEA": "#9333EA", "WPR": "#0891B2",
+}
+
+
+def prioritization_scatter(countries: list):
+    """Burden vs coverage; size = population, colour = region."""
+    fig = go.Figure()
+    for region, color in REGION_COLORS.items():
+        pts = [c for c in countries if c.get("region") == region]
+        if not pts:
+            continue
+        pops = [max(c["population"], 1) for c in pts]
+        fig.add_trace(go.Scatter(
+            x=[c["current_bcg_coverage"] for c in pts],
+            y=[c["current_tb_incidence"] for c in pts],
+            mode="markers", name=region,
+            marker=dict(color=color, opacity=0.65,
+                        size=[max(8, (p / max(pops)) ** 0.5 * 38) for p in pops]),
+            text=[c["country"] for c in pts],
+            hovertemplate="%{text}<br>BCG %{x:.0f}%<br>TB %{y:.0f}/100k<extra></extra>"))
+    _clean_layout(fig, height=440,
+                  title="TB burden vs BCG coverage (bubble = population)")
+    fig.update_xaxes(title="Current BCG coverage (%)", visible=True)
+    fig.update_yaxes(title="TB incidence / 100k", visible=True)
     return fig
 
 
@@ -192,8 +257,9 @@ def world_map(view: str, api_base: str):
         locations = [d["iso3"] for d in data]
         z = [d["predicted_tb_incidence"] for d in data]
         text = [
-            f"{d['country']}<br>Predicted TB: {d['predicted_tb_incidence']:.0f} / 100k"
-            f"<br>BCG: {d['bcg_coverage']:.0f}%<br>HIV: {d['hiv_prevalence']:.1f}%"
+            f"{d['country']}<br>Now: {d['current_tb_incidence']:.0f} → "
+            f"Predicted: {d['predicted_tb_incidence']:.0f} / 100k"
+            f"<br>BCG → {d['bcg_coverage']:.0f}%"
             for d in data
         ]
         scale = [[0, "#FFFFFF"], [0.5, "#FECACA"], [1, "#DC2626"]]
@@ -205,7 +271,8 @@ def world_map(view: str, api_base: str):
     locations = [d["iso3"] for d in data]
     text = [
         f"{d['country']}<br>TB: {(d['tb_incidence'] or 0):.0f} / 100k"
-        f"<br>BCG: {(d['bcg_coverage'] or 0):.0f}%<br>HIV: {(d['hiv_prevalence'] or 0):.1f}%"
+        f"<br>BCG: {(d['bcg_coverage'] or 0):.0f}%"
+        f"<br>GDP: ${(d['gdp_per_capita'] or 0):,.0f}"
         for d in data
     ]
 
@@ -219,8 +286,19 @@ def world_map(view: str, api_base: str):
         scale = [[0, "#FFFFFF"], [0.5, "#FED7AA"], [1, "#F97316"]]
         return _choropleth(locations, z, text, scale, False,
                            "BCG Vaccination Coverage (%)", "BCG %")
-    # HIV Burden
-    z = [d["hiv_prevalence"] or 0 for d in data]
-    scale = [[0, "#FFFFFF"], [0.5, "#FECACA"], [1, "#DC2626"]]
-    return _choropleth(locations, z, text, scale, False,
-                       "HIV Prevalence (%)", "HIV %")
+    if view == "GDP per capita":
+        import math
+        z = [math.log10((d["gdp_per_capita"] or 0) + 1) for d in data]
+        scale = [[0, "#FFFFFF"], [0.5, "#BFDBFE"], [1, "#2563EB"]]
+        return _choropleth(locations, z, text, scale, False,
+                           "GDP per capita (log scale)", "log GDP")
+    # Detection capacity (rapid molecular TB diagnostics sites per million, 2020-23)
+    z = [d.get("rapid_dx_sites") or 0 for d in data]
+    txt = [
+        f"{d['country']}<br>Rapid dx sites/M: {(d.get('rapid_dx_sites') or 0):.1f}"
+        f"<br>TB: {(d['tb_incidence'] or 0):.0f} / 100k" for d in data
+    ]
+    scale = [[0, "#FFFFFF"], [0.5, "#FED7AA"], [1, "#F97316"]]
+    return _choropleth(locations, z, txt, scale, False,
+                       "Detection capacity — rapid TB diagnostic sites / million",
+                       "sites/M")

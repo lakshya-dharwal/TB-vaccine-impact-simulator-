@@ -27,11 +27,14 @@ OPTIONAL_NUMERIC = [
 
 DEFAULTS = {"hiv_prevalence": 0.5, "health_expenditure": 6.0, "gdp_per_capita": 5000.0}
 
-# Which scenario each optional lever unlocks.
+# Which scenario each optional numeric lever unlocks. Income level is a model
+# feature for context, NOT an intervention lever (a one-tier jump is not a
+# credible, graded what-if), so it is deliberately absent here.
 LEVER_SCENARIO = {
     "bcg_coverage": "vaccine_push",
     "hiv_prevalence": "hiv_control",
     "health_expenditure": "health_boost",
+    "log_gdp": "econ_dev",
 }
 
 
@@ -60,15 +63,11 @@ def detect_schema(df: pd.DataFrame) -> dict:
         + [f"region_{r}" for r in regions]
     )
 
-    levers_present = [f for f, _ in OPTIONAL_NUMERIC
-                      if f in numeric and f in LEVER_SCENARIO]
     scenarios = ["baseline"]
-    for lever in ("bcg_coverage", "hiv_prevalence", "health_expenditure"):
+    for lever in ("bcg_coverage", "hiv_prevalence", "health_expenditure", "log_gdp"):
         if lever in numeric:
             scenarios.append(LEVER_SCENARIO[lever])
-    if use_income:
-        scenarios.append("income_up")
-    if levers_present or use_income:
+    if len(scenarios) > 1:
         scenarios.append("combined")
 
     return {

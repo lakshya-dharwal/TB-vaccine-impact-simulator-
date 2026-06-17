@@ -28,7 +28,7 @@ def test_has_core_columns(df):
 
 def test_year_range(df):
     assert df["year"].min() >= 2000
-    assert df["year"].max() <= 2022
+    assert df["year"].max() <= 2023
 
 
 def test_tb_positive(df):

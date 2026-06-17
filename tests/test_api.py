@@ -71,3 +71,11 @@ def test_simulate_all_scenarios(client, a_country, scenarios):
 def test_simulate_unknown_country(client):
     r = client.post("/simulate", json={"country": "Atlantis", "scenario": "baseline"})
     assert r.status_code == 422
+
+
+def test_prioritize(client):
+    r = client.get("/prioritize", params={"bcg_target": 90, "top": 5})
+    assert r.status_code == 200
+    data = r.json()["countries"]
+    assert 0 < len(data) <= 5
+    assert "cases_prevented_per_year" in data[0]

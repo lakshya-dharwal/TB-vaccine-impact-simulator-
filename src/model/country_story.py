@@ -9,7 +9,7 @@ SCENARIO_LABELS = {
     "vaccine_push": "a vaccination push",
     "hiv_control": "stronger HIV control",
     "health_boost": "more healthcare investment",
-    "income_up": "broader economic development",
+    "econ_dev": "broader economic development",
     "combined": "a combined prevention effort",
     "custom": "your custom adjustments",
 }

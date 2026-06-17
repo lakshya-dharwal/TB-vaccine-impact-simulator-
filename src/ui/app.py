@@ -14,7 +14,8 @@ import streamlit as st
 from src.ui.charts import (
     _pct, _usd, _val,
     before_after_figure, ci_figure, gauge_figure,
-    importance_figure, model_compare_figure, world_map,
+    importance_figure, model_compare_figure, residual_figure,
+    prioritization_bar, prioritization_scatter, world_map,
 )
 
 API_BASE = os.environ.get("TB_API_BASE", "http://localhost:8000")
@@ -36,7 +37,7 @@ SCENARIO_LABELS = {
     "vaccine_push": "Vaccine Push (+30% BCG)",
     "hiv_control": "HIV Control (-25% HIV)",
     "health_boost": "Health System Boost (+25% spending)",
-    "income_up": "Income Level Up (one tier)",
+    "econ_dev": "Economic Development (+25% GDP)",
     "combined": "Combined",
 }
 
@@ -174,7 +175,8 @@ except Exception as exc:  # noqa: BLE001
 COVARIATES = CONFIG.get("covariates", [])
 SCENARIOS = CONFIG.get("scenarios", ["baseline"])
 
-tab1, tab2, tab3 = st.tabs(["🔬 Scenario Explorer", "🌍 World Map", "📊 Model Info"])
+tab1, tab4, tab2, tab3 = st.tabs(
+    ["🔬 Scenario Explorer", "🎯 Prioritization", "🌍 World Map", "📊 Model Info"])
 
 
 # ============================================================ TAB 1
@@ -253,13 +255,7 @@ with tab1:
                     overrides["health_override"] = st.slider(
                         "Health Expenditure (% GDP)", 0.0, 20.0,
                         float(stats.get("health_expenditure") or 0))
-                if "income_level" in COVARIATES:
-                    opts = CONFIG.get("income_levels", ["L", "LM", "UM", "H"])
-                    cur = stats.get("income_level")
-                    idx = opts.index(cur) if cur in opts else 0
-                    overrides["income_override"] = st.selectbox(
-                        "Income Level", opts, index=idx,
-                        format_func=lambda x: INCOME_LABELS.get(x, x))
+                # Income level is a model feature/context, not an intervention lever.
 
             if st.button("Explore Scenario →", key="run"):
                 payload = {"country": chosen,
@@ -323,11 +319,45 @@ with tab1:
             st.info("Select a country and scenario, then click **Explore Scenario →**.")
 
 
+# ============================================================ PRIORITIZATION
+with tab4:
+    heading("Where would scaling up BCG avert the most TB?", size=22)
+    small("Ranks countries by estimated TB cases prevented per year if BCG coverage "
+          "were raised to a target — burden × population × the coverage gap. A guide "
+          "to where vaccination investment could matter most, not a policy recommendation.")
+    if API_OK and "bcg_coverage" in COVARIATES:
+        target = st.slider("Target BCG coverage (%)", 50, 99, 90, step=1)
+        with st.spinner("Ranking countries…"):
+            pr = api_get("/prioritize", {"bcg_target": float(target), "top": 200})
+        countries = pr["countries"]
+        pcol1, pcol2 = st.columns([1, 1])
+        with pcol1:
+            st.plotly_chart(prioritization_bar(countries), use_container_width=True,
+                            config={"displayModeBar": False})
+        with pcol2:
+            st.plotly_chart(prioritization_scatter(countries), use_container_width=True,
+                            config={"displayModeBar": False})
+        heading("Top countries by estimated cases prevented / year", size=16)
+        table = {
+            "Country": [c["country"] for c in countries[:15]],
+            "TB /100k": [f"{c['current_tb_incidence']:.0f}" for c in countries[:15]],
+            "BCG now→target": [f"{c['current_bcg_coverage']:.0f}→{c['target_bcg_coverage']:.0f}%"
+                               for c in countries[:15]],
+            "Reduction": [f"{c['relative_reduction_pct']:.0f}%" for c in countries[:15]],
+            "Cases prevented/yr": [f"~{c['cases_prevented_per_year']:,.0f}" for c in countries[:15]],
+        }
+        st.table(table)
+        small("Estimates assume the modelled BCG–TB association is causal, which it is "
+              "only partly — treat as a prioritisation heuristic, not a forecast.")
+    elif API_OK:
+        st.info("Prioritization needs BCG coverage in the dataset.")
+
+
 # ============================================================ TAB 2
 with tab2:
     heading("Global TB Picture", size=22)
     if API_OK:
-        views = ["TB Burden", "BCG Coverage", "HIV Burden"]
+        views = ["TB Burden", "BCG Coverage", "GDP per capita", "Detection capacity"]
         if "bcg_coverage" in COVARIATES:
             views.append("What-If: All at 90% BCG")
         view = st.radio("Map view", views, horizontal=True)
@@ -343,26 +373,36 @@ with tab3:
     st.markdown(
         f'<div style="background:#FFFFFF;border:1px solid #E5E7EB;border-radius:12px;'
         f'padding:18px;box-shadow:0 1px 3px rgba(0,0,0,0.08);color:{BODY};">'
-        'TB Futures uses a <b style="color:#1F2937;">Random Forest Regression</b> model '
-        "trained on real WHO, UNICEF, and World Bank data spanning 2000 to 2022.<br><br>"
+        'TB Futures tunes a <b style="color:#1F2937;">Random Forest Regression</b> model '
+        "(with Linear Regression and Gradient Boosting baselines) on real WHO and World "
+        "Bank data spanning 2000 to 2023.<br><br>"
         '<b style="color:#1F2937;">Training period:</b> 2000 – 2017<br>'
-        '<b style="color:#1F2937;">Test period:</b> 2018 – 2022 (held out, never seen during training)<br>'
-        '<b style="color:#1F2937;">Target:</b> TB incidence per 100k, derived from WHO notifications'
+        '<b style="color:#1F2937;">Test period:</b> 2018 – 2023 (held out, never seen during training)<br>'
+        '<b style="color:#1F2937;">Target:</b> WHO estimated TB incidence per 100k (log-modelled)'
         "</div>", unsafe_allow_html=True)
 
     if API_OK:
         try:
             info = api_get("/model-info")
             m = info["metrics"]
-            heading("Model Performance", size=20)
+            heading("Model Performance (held-out test set)", size=20)
+
+            def col(key):
+                return [f"{m[key]['r2']:.3f}", f"{m[key].get('r2_log', float('nan')):.3f}",
+                        f"{m[key]['mae']:.1f}", f"{m[key]['rmse']:.1f}"]
             st.table({
-                "Metric": ["R²", "MAE (cases/100k)", "RMSE (cases/100k)"],
-                "Random Forest": [f"{m['rf']['r2']:.3f}", f"{m['rf']['mae']:.1f}",
-                                  f"{m['rf']['rmse']:.1f}"],
-                "Linear Regression": [f"{m['lr']['r2']:.3f}", f"{m['lr']['mae']:.1f}",
-                                      f"{m['lr']['rmse']:.1f}"],
+                "Metric": ["R²", "R² (log scale)", "MAE /100k", "RMSE /100k"],
+                "Random Forest": col("rf"),
+                "Gradient Boosting": col("gbm") if "gbm" in m else ["—"] * 4,
+                "Linear Regression": col("lr"),
             })
+            small(f"Year-grouped CV R² (log): {m.get('rf_cv_r2_log', float('nan')):.3f}. "
+                  "Absolute R² is modest because predicting 2018–2023 incidence across 150+ "
+                  "heterogeneous countries is hard; log-scale fit is stronger.")
             st.plotly_chart(model_compare_figure(m), use_container_width=True)
+            if info.get("diagnostics", {}).get("y_true"):
+                st.plotly_chart(residual_figure(info["diagnostics"]),
+                                use_container_width=True)
             heading("What drives TB incidence predictions?", size=20)
             st.plotly_chart(importance_figure(info["feature_importance"]),
                             use_container_width=True)
