@@ -1,0 +1,10 @@
+services:
+  - name: tb-futures
+    type: web
+    runtime: docker
+    plan: free
+    region: ohio
+    healthCheckPath: /health
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    autoDeployTrigger: commit

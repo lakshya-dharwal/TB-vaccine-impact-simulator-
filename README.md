@@ -202,6 +202,24 @@ the FastAPI API. The older Streamlit app remains in `src/ui/` as a legacy protot
 
 ---
 
+## Deployment
+
+The repository now includes a production deployment path for Render:
+
+- `Dockerfile` builds the React frontend and serves it from the FastAPI app
+- `render.yaml` defines a single web service with `/health` as the health check
+- the deployed frontend uses same-origin API calls, so no separate frontend env var is required
+
+To deploy on Render:
+
+1. Push the repository changes to GitHub.
+2. In Render, create a new **Blueprint** and point it at this repository.
+3. Render will detect `render.yaml`, build the Docker image from `Dockerfile`, and publish the app.
+
+The app will be available from one URL, with both the UI and API served by the same service.
+
+---
+
 ## Author
 
 **Lakshya Dharwal** — BME Graduate, Arizona State University

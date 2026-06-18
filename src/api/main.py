@@ -1,20 +1,24 @@
 """TB Futures FastAPI backend."""
 
 import json
-import os
+from pathlib import Path
 
 import joblib
 import pandas as pd
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
 from src.model.country_story import generate_country_story
 from src.model.predict import prioritize, simulate
 
-DATA_PATH = "data/processed/merged_tb_dataset.csv"
-MODELS_DIR = "models"
-MODEL_CARD_PATH = "docs/MODEL_CARD.md"
+BASE_DIR = Path(__file__).resolve().parents[2]
+DATA_PATH = BASE_DIR / "data/processed/merged_tb_dataset.csv"
+MODELS_DIR = BASE_DIR / "models"
+MODEL_CARD_PATH = BASE_DIR / "docs/MODEL_CARD.md"
+FRONTEND_DIST = BASE_DIR / "frontend/dist"
 TRAINING_PERIOD = "2000-2018"
 TEST_PERIOD = "2019-2023"
 
@@ -45,18 +49,18 @@ def _load():
     if state.df is None:
         state.df = pd.read_csv(DATA_PATH)
     if state.model is None:
-        state.model = joblib.load(os.path.join(MODELS_DIR, "rf_model.pkl"))
+        state.model = joblib.load(MODELS_DIR / "rf_model.pkl")
     if state.schema is None:
-        with open(os.path.join(MODELS_DIR, "schema.json")) as f:
+        with open(MODELS_DIR / "schema.json") as f:
             state.schema = json.load(f)
     if state.metrics is None:
-        with open(os.path.join(MODELS_DIR, "model_metrics.json")) as f:
+        with open(MODELS_DIR / "model_metrics.json") as f:
             state.metrics = json.load(f)
     if state.feature_importance is None:
-        with open(os.path.join(MODELS_DIR, "feature_importance.json")) as f:
+        with open(MODELS_DIR / "feature_importance.json") as f:
             state.feature_importance = json.load(f)
     if state.diagnostics is None:
-        with open(os.path.join(MODELS_DIR, "diagnostics.json")) as f:
+        with open(MODELS_DIR / "diagnostics.json") as f:
             state.diagnostics = json.load(f)
     if state.model_card is None:
         with open(MODEL_CARD_PATH) as f:
@@ -265,12 +269,6 @@ def prioritize_view(bcg_target: float = 90.0, top: int = 20):
     }
 
 
-@app.get("/prioritization")
-def prioritization(bcg_target: float = 90.0, top: int = 20):
-    """Backward-compatible alias for the ranking endpoint."""
-    return prioritize_view(bcg_target=bcg_target, top=top)
-
-
 @app.get("/model-info")
 def model_info():
     _load()
@@ -286,3 +284,27 @@ def model_info():
         "test_period": TEST_PERIOD,
         "n_countries": int(state.df["country"].nunique()),
     }
+
+
+if (FRONTEND_DIST / "assets").is_dir():
+    app.mount("/assets", StaticFiles(directory=FRONTEND_DIST / "assets"), name="frontend-assets")
+
+
+def _frontend_response(path: str):
+    if not FRONTEND_DIST.is_dir():
+        raise HTTPException(status_code=404, detail="Frontend build not found.")
+
+    candidate = (FRONTEND_DIST / path).resolve()
+    if candidate.is_file() and FRONTEND_DIST in candidate.parents:
+        return FileResponse(candidate)
+    return FileResponse(FRONTEND_DIST / "index.html")
+
+
+@app.get("/")
+def frontend_root():
+    return _frontend_response("index.html")
+
+
+@app.get("/{path:path}")
+def frontend_app(path: str):
+    return _frontend_response(path)
