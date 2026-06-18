@@ -1,0 +1,52 @@
+{
+  "numeric": [
+    "bcg_coverage",
+    "log_gdp",
+    "year"
+  ],
+  "income_levels": [
+    "L",
+    "LM",
+    "UM",
+    "H"
+  ],
+  "regions": [
+    "AFR",
+    "AMR",
+    "EMR",
+    "EUR",
+    "SEA",
+    "WPR"
+  ],
+  "feature_columns": [
+    "bcg_coverage",
+    "log_gdp",
+    "year",
+    "income_L",
+    "income_LM",
+    "income_UM",
+    "income_H",
+    "region_AFR",
+    "region_AMR",
+    "region_EMR",
+    "region_EUR",
+    "region_SEA",
+    "region_WPR"
+  ],
+  "scenarios": [
+    "baseline",
+    "vaccine_push",
+    "income_up",
+    "combined"
+  ],
+  "use_income": true,
+  "target_source": "owid_who_estimated_incidence",
+  "target_display": "WHO estimated TB incidence from OWID SDG series (per 100k)",
+  "covariates": [
+    "bcg_coverage",
+    "gdp_per_capita",
+    "income_level"
+  ],
+  "log_target": true,
+  "target_transform": "log1p"
+}

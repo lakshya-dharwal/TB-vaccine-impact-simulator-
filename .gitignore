@@ -6,3 +6,10 @@ __pycache__/
 models/*.json
 .env
 .DS_Store
+!data/processed/
+!data/processed/merged_tb_dataset.csv
+!models/rf_model.pkl
+!models/schema.json
+!models/model_metrics.json
+!models/feature_importance.json
+!models/diagnostics.json
