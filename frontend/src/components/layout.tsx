@@ -11,7 +11,7 @@ const navItems = [
 
 function navClass(isActive: boolean) {
   return isActive
-    ? 'rounded-full bg-charcoal px-4 py-2 text-sm font-medium text-ivory shadow-soft'
+    ? 'rounded-full border border-accent/25 bg-accent/12 px-4 py-2 text-sm font-medium text-accent shadow-soft'
     : 'rounded-full px-4 py-2 text-sm font-medium text-charcoal/70 transition hover:bg-surface-2 hover:text-charcoal'
 }
 
@@ -40,7 +40,7 @@ export function AppShell() {
           <div className="flex items-center gap-3">
             <Link
               to="/prioritization"
-              className="hidden rounded-full bg-charcoal px-5 py-3 text-sm font-semibold text-ivory shadow-soft transition hover:-translate-y-0.5 hover:shadow-[0_20px_40px_rgba(22,18,17,0.16)] sm:inline-flex sm:items-center sm:gap-2"
+              className="hidden rounded-full bg-accent px-5 py-3 text-sm font-semibold text-white shadow-[0_20px_40px_rgba(242,107,58,0.22)] transition hover:-translate-y-0.5 hover:bg-[#e55f2f] sm:inline-flex sm:items-center sm:gap-2"
             >
               Open Priority View
               <MoveRight className="h-4 w-4" />

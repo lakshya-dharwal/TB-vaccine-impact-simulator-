@@ -60,7 +60,7 @@ export function Button({
 }: React.ButtonHTMLAttributes<HTMLButtonElement> & { kind?: 'primary' | 'ghost' }) {
   const classes =
     kind === 'primary'
-      ? 'bg-charcoal text-ivory shadow-soft hover:-translate-y-0.5'
+      ? 'bg-accent text-white shadow-[0_20px_40px_rgba(242,107,58,0.22)] hover:-translate-y-0.5 hover:bg-[#e55f2f]'
       : 'border border-border bg-surface text-charcoal hover:bg-surface-2'
   return (
     <button

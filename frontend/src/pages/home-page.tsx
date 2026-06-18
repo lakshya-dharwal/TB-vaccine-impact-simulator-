@@ -177,7 +177,7 @@ export function HomePage() {
                     onClick={() => updateSearch('scenario', option)}
                     className={`rounded-full px-4 py-2 text-sm font-medium transition ${
                       resolvedScenario === option && !useCustom
-                        ? 'bg-charcoal text-ivory shadow-soft'
+                        ? 'border border-accent/25 bg-accent/12 text-accent shadow-soft'
                         : 'border border-border bg-surface text-charcoal/70 hover:bg-surface-2'
                     }`}
                   >
