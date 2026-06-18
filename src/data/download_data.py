@@ -1,46 +1,34 @@
-"""Download the optional OWID covariate datasets for TB Futures.
-
-The TB target, population, region, and income level all come from
-data/raw/who_tb_data_merged.csv (tracked in the repository). Everything below is
-OPTIONAL: each covariate is merged in by process_data.py only if its file ends
-up in data/raw/. If a download fails (e.g. behind a network egress allowlist),
-the exact URL is printed so it can be fetched manually and dropped into
-data/raw/. The pipeline simply skips any covariate whose file is absent.
-"""
+"""Download the tracked OWID datasets used by TB Futures."""
 
 import os
 
 import requests
 
-os.makedirs("data/raw", exist_ok=True)
+os.makedirs("data", exist_ok=True)
 
-bcg_url = "https://ourworldindata.org/grapher/bcg-immunization-coverage-for-tb-among-1-year-olds.csv?v=1&csvType=full&useColumnShortNames=true"
-hiv_url = "https://ourworldindata.org/grapher/share-of-population-with-hiv.csv?v=1&csvType=full&useColumnShortNames=true"
-gdp_url = "https://ourworldindata.org/grapher/gdp-per-capita-worldbank.csv?v=1&csvType=full&useColumnShortNames=true"
-health_url = "https://ourworldindata.org/grapher/health-expenditure-and-financing.csv?v=1&csvType=full&useColumnShortNames=true"
-
-urls = {
-    "bcg_coverage.csv": bcg_url,
-    "hiv_prevalence.csv": hiv_url,
-    "gdp_per_capita.csv": gdp_url,
-    "health_expenditure.csv": health_url,
+URLS = {
+    "incidence-of-tuberculosis-sdgs.csv": "https://ourworldindata.org/grapher/incidence-of-tuberculosis-sdgs.csv?v=1&csvType=full&useColumnShortNames=false",
+    "bcg-immunization-coverage-for-tb-among-1-year-olds.csv": "https://ourworldindata.org/grapher/bcg-immunization-coverage-for-tb-among-1-year-olds.csv?v=1&csvType=full&useColumnShortNames=false",
+    "gdp-per-capita-worldbank.csv": "https://ourworldindata.org/grapher/gdp-per-capita-worldbank.csv?v=1&csvType=full&useColumnShortNames=false",
+    "population.csv": "https://ourworldindata.org/grapher/population.csv?v=1&csvType=full&useColumnShortNames=false",
+    "sites-providing-rapid-tuberculosis-diagnostics-per-million-people.csv": "https://ourworldindata.org/grapher/sites-providing-rapid-tuberculosis-diagnostics-per-million-people.csv?v=1&csvType=full&useColumnShortNames=false",
 }
 
-headers = {"User-Agent": "Mozilla/5.0"}
+HEADERS = {"User-Agent": "Mozilla/5.0"}
 
 
 def main():
     failures = []
-    for filename, url in urls.items():
+    for filename, url in URLS.items():
         print(f"Downloading {filename}...")
         try:
-            response = requests.get(url, headers=headers, timeout=30)
+            response = requests.get(url, headers=HEADERS, timeout=30)
         except requests.RequestException as exc:
             print(f"FAILED {filename} — {exc}")
             failures.append((filename, url))
             continue
         if response.status_code == 200:
-            with open(f"data/raw/{filename}", "wb") as f:
+            with open(os.path.join("data", filename), "wb") as f:
                 f.write(response.content)
             print(f"Saved {filename}")
         else:
@@ -50,14 +38,12 @@ def main():
     if failures:
         print("\n" + "=" * 70)
         print("Some downloads failed. Download each URL below in a browser and save")
-        print("it with the given name into data/raw/. Any covariate you skip is simply")
-        print("left out of the model — that is fine.\n")
+        print("it with the given filename into data/.\n")
         for filename, url in failures:
             print(f"  {filename}\n    {url}\n")
-        print("If sandboxed, add 'ourworldindata.org' to your network egress allowlist.")
         print("=" * 70)
     else:
-        print("\nAll optional covariate datasets downloaded into data/raw/.")
+        print("\nAll tracked OWID datasets downloaded into data/.")
 
 
 if __name__ == "__main__":

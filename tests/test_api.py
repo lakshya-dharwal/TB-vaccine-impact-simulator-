@@ -41,7 +41,10 @@ def test_health(client):
 def test_config_has_scenarios(client):
     cfg = client.get("/config").json()
     assert "baseline" in cfg["scenarios"]
+    assert "vaccine_push" in cfg["scenarios"]
+    assert "income_up" in cfg["scenarios"]
     assert isinstance(cfg["covariates"], list)
+    assert "target_display" in cfg
 
 
 def test_countries_non_empty(client):
@@ -54,6 +57,7 @@ def test_map_data_has_iso3(client):
     r = client.get("/map-data")
     assert r.status_code == 200
     assert "iso3" in r.json()[0]
+    assert "rapid_dx_sites" in r.json()[0]
 
 
 def test_simulate_valid(client, a_country, scenarios):
@@ -71,3 +75,11 @@ def test_simulate_all_scenarios(client, a_country, scenarios):
 def test_simulate_unknown_country(client):
     r = client.post("/simulate", json={"country": "Atlantis", "scenario": "baseline"})
     assert r.status_code == 422
+
+
+def test_prioritize_returns_rows(client):
+    r = client.get("/prioritize", params={"bcg_target": 90, "top": 10})
+    assert r.status_code == 200
+    data = r.json()
+    assert data["bcg_target"] == 90
+    assert len(data["rows"]) > 0

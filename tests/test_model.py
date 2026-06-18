@@ -7,7 +7,7 @@ import joblib
 import pandas as pd
 import pytest
 
-from src.model.predict import simulate
+from src.model.predict import prioritize, simulate
 
 DATA_PATH = "data/processed/merged_tb_dataset.csv"
 MODEL_PATH = "models/rf_model.pkl"
@@ -76,3 +76,14 @@ def test_all_scenarios_run_for_several_countries(df, model, schema):
         for scenario in schema["scenarios"]:
             result = simulate(country, scenario, {}, df, model, schema)
             assert result["predicted_tb_incidence"] >= 0
+
+
+def test_schema_uses_log_target(schema):
+    assert schema["log_target"] is True
+    assert schema["target_transform"] == "log1p"
+
+
+def test_prioritize_returns_ranked_rows(df, model, schema):
+    rows = prioritize(df, model, schema, bcg_target=90, top=10)
+    assert len(rows) == 10
+    assert rows[0]["cases_prevented_per_year"] >= rows[-1]["cases_prevented_per_year"]

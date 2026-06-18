@@ -53,6 +53,16 @@ def detect_schema(df: pd.DataFrame) -> dict:
         if use_income else []
     )
     regions = sorted(df["region"].dropna().unique().tolist()) if "region" in df else []
+    target_source = (
+        str(df["tb_target_source"].dropna().iloc[0])
+        if "tb_target_source" in df.columns and df["tb_target_source"].notna().any()
+        else "owid_who_estimated_incidence"
+    )
+    target_display = (
+        str(df["tb_target_display"].dropna().iloc[0])
+        if "tb_target_display" in df.columns and df["tb_target_display"].notna().any()
+        else "WHO estimated TB incidence from OWID SDG series (per 100k)"
+    )
 
     feature_columns = (
         list(numeric)
@@ -78,6 +88,8 @@ def detect_schema(df: pd.DataFrame) -> dict:
         "feature_columns": feature_columns,
         "scenarios": scenarios,
         "use_income": use_income,
+        "target_source": target_source,
+        "target_display": target_display,
         # raw covariate (source) names actually modelled — used by the UI/API
         "covariates": [src for feat, src in OPTIONAL_NUMERIC if feat in numeric]
         + (["income_level"] if use_income else []),

@@ -13,8 +13,20 @@ pytestmark = pytest.mark.skipif(
 )
 
 # Columns that are always present (covariate columns are optional/data-adaptive).
-CORE_COLUMNS = {"country", "iso3", "year", "tb_incidence", "population",
-                "income_level", "region"}
+CORE_COLUMNS = {
+    "country",
+    "iso3",
+    "year",
+    "tb_incidence",
+    "tb_target_source",
+    "tb_target_display",
+    "bcg_coverage",
+    "gdp_per_capita",
+    "population",
+    "income_level",
+    "region",
+    "rapid_dx_sites",
+}
 
 
 @pytest.fixture(scope="module")
@@ -28,7 +40,7 @@ def test_has_core_columns(df):
 
 def test_year_range(df):
     assert df["year"].min() >= 2000
-    assert df["year"].max() <= 2022
+    assert df["year"].max() <= 2023
 
 
 def test_tb_positive(df):
@@ -39,12 +51,24 @@ def test_no_nulls_in_tb_target(df):
     assert df["tb_incidence"].notna().all()
 
 
+def test_target_metadata_present(df):
+    assert df["tb_target_source"].notna().all()
+    assert df["tb_target_display"].notna().all()
+
+
 def test_income_level_valid(df):
     assert set(df["income_level"].unique()).issubset({"L", "LM", "UM", "H"})
 
 
 def test_bcg_in_range_if_present(df):
-    if "bcg_coverage" in df.columns:
-        assert df["bcg_coverage"].min() >= 0
-        assert df["bcg_coverage"].max() <= 100
-        assert df["bcg_coverage"].notna().all()
+    assert df["bcg_coverage"].min() >= 0
+    assert df["bcg_coverage"].max() <= 100
+    assert df["bcg_coverage"].notna().all()
+
+
+def test_gdp_positive(df):
+    assert (df["gdp_per_capita"] > 0).all()
+
+
+def test_target_source_is_modeled_incidence(df):
+    assert set(df["tb_target_source"].unique()) == {"owid_who_estimated_incidence"}
