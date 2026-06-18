@@ -175,7 +175,7 @@ export function MapPage() {
               }}
               className={`rounded-full px-4 py-2 text-sm font-medium transition ${
                 layer === option.value
-                  ? 'bg-charcoal text-ivory shadow-soft'
+                  ? 'border border-accent/25 bg-accent/12 text-accent shadow-soft'
                   : 'border border-border bg-surface text-charcoal/72 hover:bg-surface-2'
               }`}
             >
