@@ -1,0 +1,2078 @@
+{
+  "by_region": [
+    {
+      "region": "AFR",
+      "count": 225,
+      "mae": 80.03,
+      "bias": 11.46,
+      "rmse": 106.95
+    },
+    {
+      "region": "AMR",
+      "count": 117,
+      "mae": 22.16,
+      "bias": -4.18,
+      "rmse": 30.34
+    },
+    {
+      "region": "EMR",
+      "count": 94,
+      "mae": 44.14,
+      "bias": -13.73,
+      "rmse": 96.57
+    },
+    {
+      "region": "EUR",
+      "count": 133,
+      "mae": 18.03,
+      "bias": 2.91,
+      "rmse": 23.11
+    },
+    {
+      "region": "SEA",
+      "count": 50,
+      "mae": 76.01,
+      "bias": -16.72,
+      "rmse": 100.69
+    },
+    {
+      "region": "WPR",
+      "count": 110,
+      "mae": 137.13,
+      "bias": -62.89,
+      "rmse": 225.43
+    }
+  ],
+  "by_income": [
+    {
+      "income_level": "H",
+      "count": 115,
+      "mae": 13.96,
+      "bias": -2.53,
+      "rmse": 23.87
+    },
+    {
+      "income_level": "L",
+      "count": 115,
+      "mae": 68.75,
+      "bias": -6.39,
+      "rmse": 91.39
+    },
+    {
+      "income_level": "LM",
+      "count": 256,
+      "mae": 97.92,
+      "bias": -6.47,
+      "rmse": 146.06
+    },
+    {
+      "income_level": "UM",
+      "count": 243,
+      "mae": 47.13,
+      "bias": -16.0,
+      "rmse": 115.45
+    }
+  ],
+  "scatter_sample": [
+    {
+      "country": "Marshall Islands",
+      "year": 2023,
+      "actual": 928.0,
+      "predicted": 12.681875234923721,
+      "region": "WPR",
+      "income_level": "UM"
+    },
+    {
+      "country": "Marshall Islands",
+      "year": 2019,
+      "actual": 877.0,
+      "predicted": 17.81962602545358,
+      "region": "WPR",
+      "income_level": "UM"
+    },
+    {
+      "country": "Kiribati",
+      "year": 2023,
+      "actual": 908.0,
+      "predicted": 113.41033811480416,
+      "region": "WPR",
+      "income_level": "LM"
+    },
+    {
+      "country": "Marshall Islands",
+      "year": 2020,
+      "actual": 581.0,
+      "predicted": 18.070728638711856,
+      "region": "WPR",
+      "income_level": "UM"
+    },
+    {
+      "country": "Marshall Islands",
+      "year": 2021,
+      "actual": 478.0,
+      "predicted": 12.195538625290286,
+      "region": "WPR",
+      "income_level": "UM"
+    },
+    {
+      "country": "Kiribati",
+      "year": 2022,
+      "actual": 588.0,
+      "predicted": 123.71250484554757,
+      "region": "WPR",
+      "income_level": "LM"
+    },
+    {
+      "country": "Kiribati",
+      "year": 2020,
+      "actual": 655.0,
+      "predicted": 207.04179579449936,
+      "region": "WPR",
+      "income_level": "LM"
+    },
+    {
+      "country": "Kiribati",
+      "year": 2019,
+      "actual": 715.0,
+      "predicted": 275.0048186423148,
+      "region": "WPR",
+      "income_level": "LM"
+    },
+    {
+      "country": "Philippines",
+      "year": 2023,
+      "actual": 632.0,
+      "predicted": 194.08952538817834,
+      "region": "WPR",
+      "income_level": "LM"
+    },
+    {
+      "country": "Djibouti",
+      "year": 2023,
+      "actual": 477.0,
+      "predicted": 41.42219163715622,
+      "region": "EMR",
+      "income_level": "LM"
+    },
+    {
+      "country": "Djibouti",
+      "year": 2022,
+      "actual": 462.0,
+      "predicted": 41.18489764646359,
+      "region": "EMR",
+      "income_level": "LM"
+    },
+    {
+      "country": "Cabo Verde",
+      "year": 2023,
+      "actual": 53.0,
+      "predicted": 455.5596653029817,
+      "region": "AFR",
+      "income_level": "LM"
+    },
+    {
+      "country": "Marshall Islands",
+      "year": 2022,
+      "actual": 427.0,
+      "predicted": 27.161737739294974,
+      "region": "WPR",
+      "income_level": "UM"
+    },
+    {
+      "country": "Philippines",
+      "year": 2022,
+      "actual": 627.0,
+      "predicted": 231.0447073746629,
+      "region": "WPR",
+      "income_level": "LM"
+    },
+    {
+      "country": "Kiribati",
+      "year": 2021,
+      "actual": 547.0,
+      "predicted": 153.62855555339092,
+      "region": "WPR",
+      "income_level": "LM"
+    },
+    {
+      "country": "Solomon Islands",
+      "year": 2022,
+      "actual": 97.0,
+      "predicted": 489.2311400875443,
+      "region": "WPR",
+      "income_level": "LM"
+    },
+    {
+      "country": "Mongolia",
+      "year": 2023,
+      "actual": 448.0,
+      "predicted": 61.57697614731464,
+      "region": "WPR",
+      "income_level": "UM"
+    },
+    {
+      "country": "Philippines",
+      "year": 2021,
+      "actual": 579.0,
+      "predicted": 220.41308054441964,
+      "region": "WPR",
+      "income_level": "LM"
+    },
+    {
+      "country": "Djibouti",
+      "year": 2021,
+      "actual": 392.0,
+      "predicted": 46.00431378413309,
+      "region": "EMR",
+      "income_level": "LM"
+    },
+    {
+      "country": "Djibouti",
+      "year": 2019,
+      "actual": 389.0,
+      "predicted": 64.95214872719535,
+      "region": "EMR",
+      "income_level": "LM"
+    },
+    {
+      "country": "Lesotho",
+      "year": 2023,
+      "actual": 584.0,
+      "predicted": 270.1326235605379,
+      "region": "AFR",
+      "income_level": "LM"
+    },
+    {
+      "country": "Cabo Verde",
+      "year": 2022,
+      "actual": 39.0,
+      "predicted": 350.76865449677365,
+      "region": "AFR",
+      "income_level": "LM"
+    },
+    {
+      "country": "Indonesia",
+      "year": 2023,
+      "actual": 388.0,
+      "predicted": 77.46625512211669,
+      "region": "SEA",
+      "income_level": "UM"
+    },
+    {
+      "country": "Indonesia",
+      "year": 2022,
+      "actual": 375.0,
+      "predicted": 70.96859566894243,
+      "region": "SEA",
+      "income_level": "UM"
+    },
+    {
+      "country": "Solomon Islands",
+      "year": 2023,
+      "actual": 97.0,
+      "predicted": 394.73005726751126,
+      "region": "WPR",
+      "income_level": "LM"
+    },
+    {
+      "country": "Djibouti",
+      "year": 2020,
+      "actual": 366.0,
+      "predicted": 72.51545670801022,
+      "region": "EMR",
+      "income_level": "LM"
+    },
+    {
+      "country": "Sierra Leone",
+      "year": 2019,
+      "actual": 412.0,
+      "predicted": 124.02124787130438,
+      "region": "AFR",
+      "income_level": "L"
+    },
+    {
+      "country": "Lesotho",
+      "year": 2022,
+      "actual": 611.0,
+      "predicted": 324.8718114981852,
+      "region": "AFR",
+      "income_level": "LM"
+    },
+    {
+      "country": "Sierra Leone",
+      "year": 2022,
+      "actual": 388.0,
+      "predicted": 113.77317509933636,
+      "region": "AFR",
+      "income_level": "L"
+    },
+    {
+      "country": "Sierra Leone",
+      "year": 2021,
+      "actual": 395.0,
+      "predicted": 123.96607721782091,
+      "region": "AFR",
+      "income_level": "L"
+    },
+    {
+      "country": "Philippines",
+      "year": 2019,
+      "actual": 554.0,
+      "predicted": 284.31590968218353,
+      "region": "WPR",
+      "income_level": "LM"
+    },
+    {
+      "country": "Cabo Verde",
+      "year": 2019,
+      "actual": 57.0,
+      "predicted": 324.45996127355517,
+      "region": "AFR",
+      "income_level": "LM"
+    },
+    {
+      "country": "Sierra Leone",
+      "year": 2023,
+      "actual": 380.0,
+      "predicted": 123.72695009411996,
+      "region": "AFR",
+      "income_level": "L"
+    },
+    {
+      "country": "Equatorial Guinea",
+      "year": 2023,
+      "actual": 203.0,
+      "predicted": 454.83384291461965,
+      "region": "AFR",
+      "income_level": "UM"
+    },
+    {
+      "country": "Benin",
+      "year": 2023,
+      "actual": 42.0,
+      "predicted": 286.734652980209,
+      "region": "AFR",
+      "income_level": "LM"
+    },
+    {
+      "country": "Papua New Guinea",
+      "year": 2021,
+      "actual": 622.0,
+      "predicted": 381.4790667924718,
+      "region": "WPR",
+      "income_level": "LM"
+    },
+    {
+      "country": "South Africa",
+      "year": 2023,
+      "actual": 427.0,
+      "predicted": 663.8586403005734,
+      "region": "AFR",
+      "income_level": "UM"
+    },
+    {
+      "country": "Indonesia",
+      "year": 2019,
+      "actual": 312.0,
+      "predicted": 80.33959044454355,
+      "region": "SEA",
+      "income_level": "UM"
+    },
+    {
+      "country": "Micronesia (Federated States of)",
+      "year": 2021,
+      "actual": 137.0,
+      "predicted": 366.04937072296724,
+      "region": "WPR",
+      "income_level": "LM"
+    },
+    {
+      "country": "Solomon Islands",
+      "year": 2021,
+      "actual": 108.0,
+      "predicted": 327.08155722083046,
+      "region": "WPR",
+      "income_level": "LM"
+    },
+    {
+      "country": "Vanuatu",
+      "year": 2021,
+      "actual": 48.0,
+      "predicted": 265.24211547616716,
+      "region": "WPR",
+      "income_level": "LM"
+    },
+    {
+      "country": "Namibia",
+      "year": 2020,
+      "actual": 450.0,
+      "predicted": 234.0368810828474,
+      "region": "AFR",
+      "income_level": "UM"
+    },
+    {
+      "country": "Benin",
+      "year": 2022,
+      "actual": 44.0,
+      "predicted": 256.9771868013998,
+      "region": "AFR",
+      "income_level": "LM"
+    },
+    {
+      "country": "Solomon Islands",
+      "year": 2020,
+      "actual": 97.0,
+      "predicted": 308.053298189908,
+      "region": "WPR",
+      "income_level": "LM"
+    },
+    {
+      "country": "Cambodia",
+      "year": 2021,
+      "actual": 279.0,
+      "predicted": 70.22581316066993,
+      "region": "WPR",
+      "income_level": "LM"
+    },
+    {
+      "country": "Papua New Guinea",
+      "year": 2023,
+      "actual": 647.0,
+      "predicted": 438.59654522635896,
+      "region": "WPR",
+      "income_level": "LM"
+    },
+    {
+      "country": "Algeria",
+      "year": 2021,
+      "actual": 57.0,
+      "predicted": 264.2189123053178,
+      "region": "AFR",
+      "income_level": "LM"
+    },
+    {
+      "country": "Algeria",
+      "year": 2020,
+      "actual": 52.0,
+      "predicted": 256.2203621088817,
+      "region": "AFR",
+      "income_level": "LM"
+    },
+    {
+      "country": "Samoa",
+      "year": 2023,
+      "actual": 6.0,
+      "predicted": 208.81989275011358,
+      "region": "WPR",
+      "income_level": "LM"
+    },
+    {
+      "country": "Mozambique",
+      "year": 2020,
+      "actual": 361.0,
+      "predicted": 158.63924791381012,
+      "region": "AFR",
+      "income_level": "L"
+    },
+    {
+      "country": "Democratic Republic of the Congo",
+      "year": 2023,
+      "actual": 385.0,
+      "predicted": 183.68804048279867,
+      "region": "AFR",
+      "income_level": "L"
+    },
+    {
+      "country": "Equatorial Guinea",
+      "year": 2022,
+      "actual": 207.0,
+      "predicted": 406.65141227962397,
+      "region": "AFR",
+      "income_level": "UM"
+    },
+    {
+      "country": "Algeria",
+      "year": 2022,
+      "actual": 55.0,
+      "predicted": 253.43102328223395,
+      "region": "AFR",
+      "income_level": "LM"
+    },
+    {
+      "country": "Vanuatu",
+      "year": 2020,
+      "actual": 52.0,
+      "predicted": 249.99306038602742,
+      "region": "WPR",
+      "income_level": "LM"
+    },
+    {
+      "country": "Mozambique",
+      "year": 2022,
+      "actual": 361.0,
+      "predicted": 163.57506475634835,
+      "region": "AFR",
+      "income_level": "L"
+    },
+    {
+      "country": "Zambia",
+      "year": 2020,
+      "actual": 319.0,
+      "predicted": 127.71581771616633,
+      "region": "AFR",
+      "income_level": "LM"
+    },
+    {
+      "country": "Papua New Guinea",
+      "year": 2022,
+      "actual": 632.0,
+      "predicted": 440.9650977811474,
+      "region": "WPR",
+      "income_level": "LM"
+    },
+    {
+      "country": "Pakistan",
+      "year": 2023,
+      "actual": 267.0,
+      "predicted": 76.0494758176529,
+      "region": "EMR",
+      "income_level": "LM"
+    },
+    {
+      "country": "Equatorial Guinea",
+      "year": 2021,
+      "actual": 211.0,
+      "predicted": 400.74669870318115,
+      "region": "AFR",
+      "income_level": "UM"
+    },
+    {
+      "country": "Cambodia",
+      "year": 2019,
+      "actual": 293.0,
+      "predicted": 105.0093400242787,
+      "region": "WPR",
+      "income_level": "LM"
+    },
+    {
+      "country": "Vanuatu",
+      "year": 2023,
+      "actual": 45.0,
+      "predicted": 230.88302137204377,
+      "region": "WPR",
+      "income_level": "LM"
+    },
+    {
+      "country": "Lesotho",
+      "year": 2019,
+      "actual": 654.0,
+      "predicted": 471.2168851425341,
+      "region": "AFR",
+      "income_level": "LM"
+    },
+    {
+      "country": "Philippines",
+      "year": 2020,
+      "actual": 544.0,
+      "predicted": 361.4507755764403,
+      "region": "WPR",
+      "income_level": "LM"
+    },
+    {
+      "country": "Pakistan",
+      "year": 2022,
+      "actual": 275.0,
+      "predicted": 93.19016192313865,
+      "region": "EMR",
+      "income_level": "LM"
+    },
+    {
+      "country": "Papua New Guinea",
+      "year": 2019,
+      "actual": 614.0,
+      "predicted": 436.9857603451342,
+      "region": "WPR",
+      "income_level": "LM"
+    },
+    {
+      "country": "occupied Palestinian territory, including east Jerusalem",
+      "year": 2023,
+      "actual": 0.4,
+      "predicted": 173.84825611656126,
+      "region": "EMR",
+      "income_level": "LM"
+    },
+    {
+      "country": "Papua New Guinea",
+      "year": 2020,
+      "actual": 616.0,
+      "predicted": 443.0797929867626,
+      "region": "WPR",
+      "income_level": "LM"
+    },
+    {
+      "country": "Cambodia",
+      "year": 2022,
+      "actual": 277.0,
+      "predicted": 105.0093400242787,
+      "region": "WPR",
+      "income_level": "LM"
+    },
+    {
+      "country": "South Africa",
+      "year": 2022,
+      "actual": 468.0,
+      "predicted": 638.9384644814554,
+      "region": "AFR",
+      "income_level": "UM"
+    },
+    {
+      "country": "Niger",
+      "year": 2023,
+      "actual": 83.0,
+      "predicted": 251.57440349626467,
+      "region": "AFR",
+      "income_level": "L"
+    },
+    {
+      "country": "Vanuatu",
+      "year": 2022,
+      "actual": 46.0,
+      "predicted": 212.73878549897867,
+      "region": "WPR",
+      "income_level": "LM"
+    },
+    {
+      "country": "Micronesia (Federated States of)",
+      "year": 2022,
+      "actual": 91.0,
+      "predicted": 257.077080692893,
+      "region": "WPR",
+      "income_level": "LM"
+    },
+    {
+      "country": "Cambodia",
+      "year": 2020,
+      "actual": 285.0,
+      "predicted": 122.50405091924023,
+      "region": "WPR",
+      "income_level": "LM"
+    },
+    {
+      "country": "Benin",
+      "year": 2019,
+      "actual": 51.0,
+      "predicted": 211.89985828681193,
+      "region": "AFR",
+      "income_level": "LM"
+    },
+    {
+      "country": "Rwanda",
+      "year": 2023,
+      "actual": 62.0,
+      "predicted": 218.67749259412852,
+      "region": "AFR",
+      "income_level": "L"
+    },
+    {
+      "country": "Democratic Republic of the Congo",
+      "year": 2022,
+      "actual": 392.0,
+      "predicted": 236.0203374955907,
+      "region": "AFR",
+      "income_level": "L"
+    },
+    {
+      "country": "Micronesia (Federated States of)",
+      "year": 2023,
+      "actual": 397.0,
+      "predicted": 241.47392999901538,
+      "region": "WPR",
+      "income_level": "LM"
+    },
+    {
+      "country": "Lesotho",
+      "year": 2021,
+      "actual": 606.0,
+      "predicted": 451.28108874428614,
+      "region": "AFR",
+      "income_level": "LM"
+    },
+    {
+      "country": "Equatorial Guinea",
+      "year": 2020,
+      "actual": 216.0,
+      "predicted": 368.18387226482247,
+      "region": "AFR",
+      "income_level": "UM"
+    },
+    {
+      "country": "Algeria",
+      "year": 2019,
+      "actual": 65.0,
+      "predicted": 216.66674944076678,
+      "region": "AFR",
+      "income_level": "LM"
+    },
+    {
+      "country": "Myanmar",
+      "year": 2023,
+      "actual": 482.0,
+      "predicted": 331.8971306806424,
+      "region": "SEA",
+      "income_level": "LM"
+    },
+    {
+      "country": "Samoa",
+      "year": 2020,
+      "actual": 6.1,
+      "predicted": 154.50634458054788,
+      "region": "WPR",
+      "income_level": "LM"
+    },
+    {
+      "country": "Timor-Leste",
+      "year": 2020,
+      "actual": 381.0,
+      "predicted": 234.76260191091367,
+      "region": "SEA",
+      "income_level": "LM"
+    },
+    {
+      "country": "South Africa",
+      "year": 2019,
+      "actual": 615.0,
+      "predicted": 758.102318623319,
+      "region": "AFR",
+      "income_level": "UM"
+    },
+    {
+      "country": "Burundi",
+      "year": 2020,
+      "actual": 97.0,
+      "predicted": 239.45958907554794,
+      "region": "AFR",
+      "income_level": "L"
+    },
+    {
+      "country": "Angola",
+      "year": 2021,
+      "actual": 371.0,
+      "predicted": 229.18249997178367,
+      "region": "AFR",
+      "income_level": "LM"
+    },
+    {
+      "country": "Tuvalu",
+      "year": 2023,
+      "actual": 163.0,
+      "predicted": 23.54764788669094,
+      "region": "WPR",
+      "income_level": "UM"
+    },
+    {
+      "country": "Niger",
+      "year": 2022,
+      "actual": 81.0,
+      "predicted": 218.98499575715493,
+      "region": "AFR",
+      "income_level": "L"
+    },
+    {
+      "country": "Sri Lanka",
+      "year": 2022,
+      "actual": 56.0,
+      "predicted": 192.22639649480027,
+      "region": "SEA",
+      "income_level": "LM"
+    },
+    {
+      "country": "Benin",
+      "year": 2021,
+      "actual": 46.0,
+      "predicted": 181.0164934114102,
+      "region": "AFR",
+      "income_level": "LM"
+    },
+    {
+      "country": "Sierra Leone",
+      "year": 2020,
+      "actual": 403.0,
+      "predicted": 268.22693792686334,
+      "region": "AFR",
+      "income_level": "L"
+    },
+    {
+      "country": "Angola",
+      "year": 2023,
+      "actual": 383.0,
+      "predicted": 248.39226538222619,
+      "region": "AFR",
+      "income_level": "LM"
+    },
+    {
+      "country": "Niger",
+      "year": 2020,
+      "actual": 81.0,
+      "predicted": 212.7286867598083,
+      "region": "AFR",
+      "income_level": "L"
+    },
+    {
+      "country": "Niger",
+      "year": 2021,
+      "actual": 80.0,
+      "predicted": 207.80326217789428,
+      "region": "AFR",
+      "income_level": "L"
+    },
+    {
+      "country": "Timor-Leste",
+      "year": 2021,
+      "actual": 398.0,
+      "predicted": 270.80797360967057,
+      "region": "SEA",
+      "income_level": "LM"
+    },
+    {
+      "country": "Sri Lanka",
+      "year": 2023,
+      "actual": 57.0,
+      "predicted": 183.61120321144412,
+      "region": "SEA",
+      "income_level": "LM"
+    },
+    {
+      "country": "Angola",
+      "year": 2022,
+      "actual": 379.0,
+      "predicted": 253.01505071825878,
+      "region": "AFR",
+      "income_level": "LM"
+    },
+    {
+      "country": "Sudan",
+      "year": 2022,
+      "actual": 54.0,
+      "predicted": 177.2217841794291,
+      "region": "EMR",
+      "income_level": "L"
+    },
+    {
+      "country": "Equatorial Guinea",
+      "year": 2019,
+      "actual": 220.0,
+      "predicted": 342.3416365077876,
+      "region": "AFR",
+      "income_level": "UM"
+    },
+    {
+      "country": "Rwanda",
+      "year": 2021,
+      "actual": 63.0,
+      "predicted": 184.54033209846617,
+      "region": "AFR",
+      "income_level": "L"
+    },
+    {
+      "country": "Sudan",
+      "year": 2023,
+      "actual": 50.0,
+      "predicted": 171.22625937171537,
+      "region": "EMR",
+      "income_level": "L"
+    },
+    {
+      "country": "Angola",
+      "year": 2020,
+      "actual": 373.0,
+      "predicted": 253.01568973269255,
+      "region": "AFR",
+      "income_level": "LM"
+    },
+    {
+      "country": "Namibia",
+      "year": 2023,
+      "actual": 432.0,
+      "predicted": 551.8921944747909,
+      "region": "AFR",
+      "income_level": "UM"
+    },
+    {
+      "country": "Cambodia",
+      "year": 2023,
+      "actual": 276.0,
+      "predicted": 156.9844264797455,
+      "region": "WPR",
+      "income_level": "LM"
+    },
+    {
+      "country": "Nauru",
+      "year": 2021,
+      "actual": 179.0,
+      "predicted": 60.51794243337417,
+      "region": "WPR",
+      "income_level": "H"
+    },
+    {
+      "country": "Benin",
+      "year": 2020,
+      "actual": 48.0,
+      "predicted": 165.0512860633893,
+      "region": "AFR",
+      "income_level": "LM"
+    },
+    {
+      "country": "Zambia",
+      "year": 2019,
+      "actual": 333.0,
+      "predicted": 216.0333510769095,
+      "region": "AFR",
+      "income_level": "LM"
+    },
+    {
+      "country": "Niger",
+      "year": 2019,
+      "actual": 82.0,
+      "predicted": 198.7905701122021,
+      "region": "AFR",
+      "income_level": "L"
+    },
+    {
+      "country": "Tuvalu",
+      "year": 2022,
+      "actual": 260.0,
+      "predicted": 143.40483519849695,
+      "region": "WPR",
+      "income_level": "UM"
+    },
+    {
+      "country": "Sri Lanka",
+      "year": 2020,
+      "actual": 55.0,
+      "predicted": 171.31913256988224,
+      "region": "SEA",
+      "income_level": "LM"
+    },
+    {
+      "country": "Mozambique",
+      "year": 2021,
+      "actual": 361.0,
+      "predicted": 245.05006025836016,
+      "region": "AFR",
+      "income_level": "L"
+    },
+    {
+      "country": "Senegal",
+      "year": 2020,
+      "actual": 139.0,
+      "predicted": 254.3992762404032,
+      "region": "AFR",
+      "income_level": "LM"
+    },
+    {
+      "country": "Senegal",
+      "year": 2021,
+      "actual": 136.0,
+      "predicted": 250.94699399496346,
+      "region": "AFR",
+      "income_level": "LM"
+    },
+    {
+      "country": "Nepal",
+      "year": 2020,
+      "actual": 228.0,
+      "predicted": 341.2895852596297,
+      "region": "SEA",
+      "income_level": "LM"
+    },
+    {
+      "country": "Lao People's Democratic Republic",
+      "year": 2023,
+      "actual": 132.0,
+      "predicted": 245.17253284089435,
+      "region": "WPR",
+      "income_level": "LM"
+    },
+    {
+      "country": "Nepal",
+      "year": 2021,
+      "actual": 230.0,
+      "predicted": 341.8764931049609,
+      "region": "SEA",
+      "income_level": "LM"
+    },
+    {
+      "country": "Senegal",
+      "year": 2023,
+      "actual": 133.0,
+      "predicted": 244.60300553001537,
+      "region": "AFR",
+      "income_level": "LM"
+    },
+    {
+      "country": "Mozambique",
+      "year": 2023,
+      "actual": 361.0,
+      "predicted": 249.69927941501638,
+      "region": "AFR",
+      "income_level": "L"
+    },
+    {
+      "country": "Central African Republic",
+      "year": 2022,
+      "actual": 437.0,
+      "predicted": 326.9059445670687,
+      "region": "AFR",
+      "income_level": "L"
+    },
+    {
+      "country": "Senegal",
+      "year": 2022,
+      "actual": 134.0,
+      "predicted": 243.9207314142218,
+      "region": "AFR",
+      "income_level": "LM"
+    },
+    {
+      "country": "Lesotho",
+      "year": 2020,
+      "actual": 599.0,
+      "predicted": 489.21677715925046,
+      "region": "AFR",
+      "income_level": "LM"
+    },
+    {
+      "country": "Peru",
+      "year": 2022,
+      "actual": 149.0,
+      "predicted": 39.457631999700865,
+      "region": "AMR",
+      "income_level": "UM"
+    },
+    {
+      "country": "Congo",
+      "year": 2023,
+      "actual": 298.0,
+      "predicted": 190.99306434355418,
+      "region": "AFR",
+      "income_level": "LM"
+    },
+    {
+      "country": "Malawi",
+      "year": 2019,
+      "actual": 146.0,
+      "predicted": 251.57440349626467,
+      "region": "AFR",
+      "income_level": "L"
+    },
+    {
+      "country": "Central African Republic",
+      "year": 2021,
+      "actual": 446.0,
+      "predicted": 340.8873988318452,
+      "region": "AFR",
+      "income_level": "L"
+    },
+    {
+      "country": "Kenya",
+      "year": 2019,
+      "actual": 267.0,
+      "predicted": 162.13786988285108,
+      "region": "AFR",
+      "income_level": "LM"
+    },
+    {
+      "country": "Peru",
+      "year": 2023,
+      "actual": 149.0,
+      "predicted": 44.1966468016013,
+      "region": "AMR",
+      "income_level": "UM"
+    },
+    {
+      "country": "Congo",
+      "year": 2022,
+      "actual": 297.0,
+      "predicted": 192.34275860167767,
+      "region": "AFR",
+      "income_level": "LM"
+    },
+    {
+      "country": "Congo",
+      "year": 2020,
+      "actual": 300.0,
+      "predicted": 196.1661351949602,
+      "region": "AFR",
+      "income_level": "LM"
+    },
+    {
+      "country": "Samoa",
+      "year": 2022,
+      "actual": 4.2,
+      "predicted": 107.59530283133935,
+      "region": "WPR",
+      "income_level": "LM"
+    },
+    {
+      "country": "Sudan",
+      "year": 2020,
+      "actual": 62.0,
+      "predicted": 165.02417400877846,
+      "region": "EMR",
+      "income_level": "L"
+    },
+    {
+      "country": "Sao Tome and Principe",
+      "year": 2021,
+      "actual": 59.0,
+      "predicted": 160.82676303026503,
+      "region": "AFR",
+      "income_level": "LM"
+    },
+    {
+      "country": "Myanmar",
+      "year": 2022,
+      "actual": 434.0,
+      "predicted": 332.3174739456278,
+      "region": "SEA",
+      "income_level": "LM"
+    },
+    {
+      "country": "Timor-Leste",
+      "year": 2022,
+      "actual": 422.0,
+      "predicted": 320.36146432477335,
+      "region": "SEA",
+      "income_level": "LM"
+    },
+    {
+      "country": "Lao People's Democratic Republic",
+      "year": 2022,
+      "actual": 138.0,
+      "predicted": 239.35702122722714,
+      "region": "WPR",
+      "income_level": "LM"
+    },
+    {
+      "country": "Viet Nam",
+      "year": 2021,
+      "actual": 171.0,
+      "predicted": 271.08384456857925,
+      "region": "WPR",
+      "income_level": "LM"
+    },
+    {
+      "country": "Democratic Republic of the Congo",
+      "year": 2019,
+      "actual": 417.0,
+      "predicted": 317.08753202587565,
+      "region": "AFR",
+      "income_level": "L"
+    },
+    {
+      "country": "Nauru",
+      "year": 2022,
+      "actual": 161.0,
+      "predicted": 61.52377775782376,
+      "region": "WPR",
+      "income_level": "H"
+    },
+    {
+      "country": "Democratic Republic of the Congo",
+      "year": 2020,
+      "actual": 409.0,
+      "predicted": 312.35229024548585,
+      "region": "AFR",
+      "income_level": "L"
+    },
+    {
+      "country": "Mauritania",
+      "year": 2023,
+      "actual": 70.0,
+      "predicted": 166.13232638386592,
+      "region": "AFR",
+      "income_level": "LM"
+    },
+    {
+      "country": "Rwanda",
+      "year": 2020,
+      "actual": 63.0,
+      "predicted": 159.05163683125664,
+      "region": "AFR",
+      "income_level": "L"
+    },
+    {
+      "country": "Cameroon",
+      "year": 2023,
+      "actual": 137.0,
+      "predicted": 232.72811383776246,
+      "region": "AFR",
+      "income_level": "LM"
+    },
+    {
+      "country": "Comoros",
+      "year": 2021,
+      "actual": 32.0,
+      "predicted": 127.71581771616633,
+      "region": "AFR",
+      "income_level": "LM"
+    },
+    {
+      "country": "Samoa",
+      "year": 2021,
+      "actual": 6.1,
+      "predicted": 101.45263968419293,
+      "region": "WPR",
+      "income_level": "LM"
+    },
+    {
+      "country": "Comoros",
+      "year": 2023,
+      "actual": 26.0,
+      "predicted": 119.90162594622399,
+      "region": "AFR",
+      "income_level": "LM"
+    },
+    {
+      "country": "Sudan",
+      "year": 2021,
+      "actual": 58.0,
+      "predicted": 151.83254113547468,
+      "region": "EMR",
+      "income_level": "L"
+    },
+    {
+      "country": "Peru",
+      "year": 2020,
+      "actual": 128.0,
+      "predicted": 34.47485901028013,
+      "region": "AMR",
+      "income_level": "UM"
+    },
+    {
+      "country": "Peru",
+      "year": 2021,
+      "actual": 137.0,
+      "predicted": 44.19264717090984,
+      "region": "AMR",
+      "income_level": "UM"
+    },
+    {
+      "country": "Comoros",
+      "year": 2022,
+      "actual": 29.0,
+      "predicted": 121.66328155650508,
+      "region": "AFR",
+      "income_level": "LM"
+    },
+    {
+      "country": "Viet Nam",
+      "year": 2022,
+      "actual": 178.0,
+      "predicted": 270.10451875542856,
+      "region": "WPR",
+      "income_level": "LM"
+    },
+    {
+      "country": "India",
+      "year": 2021,
+      "actual": 196.0,
+      "predicted": 287.97917140983316,
+      "region": "SEA",
+      "income_level": "LM"
+    },
+    {
+      "country": "Central African Republic",
+      "year": 2019,
+      "actual": 464.0,
+      "predicted": 372.62208844304683,
+      "region": "AFR",
+      "income_level": "L"
+    },
+    {
+      "country": "India",
+      "year": 2020,
+      "actual": 197.0,
+      "predicted": 288.0071277347538,
+      "region": "SEA",
+      "income_level": "LM"
+    },
+    {
+      "country": "Nauru",
+      "year": 2023,
+      "actual": 152.0,
+      "predicted": 61.52377775782376,
+      "region": "WPR",
+      "income_level": "H"
+    },
+    {
+      "country": "Sao Tome and Principe",
+      "year": 2023,
+      "actual": 73.0,
+      "predicted": 163.2125438914876,
+      "region": "AFR",
+      "income_level": "LM"
+    },
+    {
+      "country": "India",
+      "year": 2023,
+      "actual": 192.0,
+      "predicted": 282.0712887493037,
+      "region": "SEA",
+      "income_level": "LM"
+    },
+    {
+      "country": "Togo",
+      "year": 2022,
+      "actual": 47.0,
+      "predicted": 135.77652612043187,
+      "region": "AFR",
+      "income_level": "L"
+    },
+    {
+      "country": "Nauru",
+      "year": 2019,
+      "actual": 147.0,
+      "predicted": 58.93752255934768,
+      "region": "WPR",
+      "income_level": "H"
+    },
+    {
+      "country": "Namibia",
+      "year": 2022,
+      "actual": 441.0,
+      "predicted": 528.6227470098949,
+      "region": "AFR",
+      "income_level": "UM"
+    },
+    {
+      "country": "Thailand",
+      "year": 2019,
+      "actual": 150.0,
+      "predicted": 62.432306472145356,
+      "region": "SEA",
+      "income_level": "UM"
+    },
+    {
+      "country": "Indonesia",
+      "year": 2021,
+      "actual": 330.0,
+      "predicted": 242.77983105167542,
+      "region": "SEA",
+      "income_level": "LM"
+    },
+    {
+      "country": "Uganda",
+      "year": 2021,
+      "actual": 199.0,
+      "predicted": 111.87967225598804,
+      "region": "AFR",
+      "income_level": "L"
+    },
+    {
+      "country": "Syrian Arab Republic",
+      "year": 2022,
+      "actual": 22.0,
+      "predicted": 108.88009846778708,
+      "region": "EMR",
+      "income_level": "L"
+    },
+    {
+      "country": "Sudan",
+      "year": 2019,
+      "actual": 67.0,
+      "predicted": 153.20852399618818,
+      "region": "EMR",
+      "income_level": "L"
+    },
+    {
+      "country": "Congo",
+      "year": 2021,
+      "actual": 297.0,
+      "predicted": 210.8654342786551,
+      "region": "AFR",
+      "income_level": "LM"
+    },
+    {
+      "country": "Thailand",
+      "year": 2023,
+      "actual": 149.0,
+      "predicted": 62.99900765106053,
+      "region": "SEA",
+      "income_level": "UM"
+    },
+    {
+      "country": "Mozambique",
+      "year": 2019,
+      "actual": 361.0,
+      "predicted": 275.2902725563955,
+      "region": "AFR",
+      "income_level": "L"
+    },
+    {
+      "country": "Kenya",
+      "year": 2022,
+      "actual": 238.0,
+      "predicted": 152.34228988118716,
+      "region": "AFR",
+      "income_level": "LM"
+    },
+    {
+      "country": "Mali",
+      "year": 2023,
+      "actual": 52.0,
+      "predicted": 137.50430717490633,
+      "region": "AFR",
+      "income_level": "L"
+    },
+    {
+      "country": "Malawi",
+      "year": 2020,
+      "actual": 138.0,
+      "predicted": 223.44553505465373,
+      "region": "AFR",
+      "income_level": "L"
+    },
+    {
+      "country": "Central African Republic",
+      "year": 2020,
+      "actual": 455.0,
+      "predicted": 370.0999137839064,
+      "region": "AFR",
+      "income_level": "L"
+    },
+    {
+      "country": "Kenya",
+      "year": 2021,
+      "actual": 247.0,
+      "predicted": 162.54876999905335,
+      "region": "AFR",
+      "income_level": "LM"
+    },
+    {
+      "country": "Cabo Verde",
+      "year": 2020,
+      "actual": 57.0,
+      "predicted": 140.3476563012928,
+      "region": "AFR",
+      "income_level": "LM"
+    },
+    {
+      "country": "United Republic of Tanzania",
+      "year": 2021,
+      "actual": 208.0,
+      "predicted": 125.04574296475326,
+      "region": "AFR",
+      "income_level": "LM"
+    },
+    {
+      "country": "Liberia",
+      "year": 2019,
+      "actual": 249.0,
+      "predicted": 166.23906304698465,
+      "region": "AFR",
+      "income_level": "L"
+    },
+    {
+      "country": "Democratic Republic of the Congo",
+      "year": 2021,
+      "actual": 401.0,
+      "predicted": 318.68693607256,
+      "region": "AFR",
+      "income_level": "L"
+    },
+    {
+      "country": "Guinea-Bissau",
+      "year": 2023,
+      "actual": 178.0,
+      "predicted": 96.40187177197217,
+      "region": "AFR",
+      "income_level": "L"
+    },
+    {
+      "country": "Senegal",
+      "year": 2019,
+      "actual": 143.0,
+      "predicted": 224.52031802041063,
+      "region": "AFR",
+      "income_level": "LM"
+    },
+    {
+      "country": "Cabo Verde",
+      "year": 2021,
+      "actual": 49.0,
+      "predicted": 130.2450190457427,
+      "region": "AFR",
+      "income_level": "LM"
+    },
+    {
+      "country": "Nepal",
+      "year": 2022,
+      "actual": 234.0,
+      "predicted": 314.55404556990356,
+      "region": "SEA",
+      "income_level": "LM"
+    },
+    {
+      "country": "Timor-Leste",
+      "year": 2023,
+      "actual": 455.0,
+      "predicted": 376.19991458246125,
+      "region": "SEA",
+      "income_level": "LM"
+    },
+    {
+      "country": "Nepal",
+      "year": 2019,
+      "actual": 238.0,
+      "predicted": 316.4608251743407,
+      "region": "SEA",
+      "income_level": "LM"
+    },
+    {
+      "country": "Zambia",
+      "year": 2021,
+      "actual": 307.0,
+      "predicted": 228.57214160192277,
+      "region": "AFR",
+      "income_level": "L"
+    },
+    {
+      "country": "Zambia",
+      "year": 2022,
+      "actual": 295.0,
+      "predicted": 217.21396374423318,
+      "region": "AFR",
+      "income_level": "LM"
+    },
+    {
+      "country": "Togo",
+      "year": 2023,
+      "actual": 47.0,
+      "predicted": 123.64456845341756,
+      "region": "AFR",
+      "income_level": "L"
+    },
+    {
+      "country": "Mauritania",
+      "year": 2020,
+      "actual": 84.0,
+      "predicted": 160.36317627925035,
+      "region": "AFR",
+      "income_level": "LM"
+    },
+    {
+      "country": "Guinea-Bissau",
+      "year": 2019,
+      "actual": 189.0,
+      "predicted": 113.04352996169244,
+      "region": "AFR",
+      "income_level": "L"
+    },
+    {
+      "country": "Solomon Islands",
+      "year": 2019,
+      "actual": 111.0,
+      "predicted": 186.62463831532597,
+      "region": "WPR",
+      "income_level": "LM"
+    },
+    {
+      "country": "Burundi",
+      "year": 2023,
+      "actual": 86.0,
+      "predicted": 161.16768907622648,
+      "region": "AFR",
+      "income_level": "L"
+    },
+    {
+      "country": "Comoros",
+      "year": 2019,
+      "actual": 37.0,
+      "predicted": 111.99877599403158,
+      "region": "AFR",
+      "income_level": "LM"
+    },
+    {
+      "country": "Mauritania",
+      "year": 2022,
+      "actual": 75.0,
+      "predicted": 149.972581140422,
+      "region": "AFR",
+      "income_level": "LM"
+    },
+    {
+      "country": "Guinea-Bissau",
+      "year": 2022,
+      "actual": 180.0,
+      "predicted": 105.95253303266996,
+      "region": "AFR",
+      "income_level": "L"
+    },
+    {
+      "country": "Uganda",
+      "year": 2023,
+      "actual": 198.0,
+      "predicted": 270.7613372510119,
+      "region": "AFR",
+      "income_level": "L"
+    },
+    {
+      "country": "Micronesia (Federated States of)",
+      "year": 2019,
+      "actual": 180.0,
+      "predicted": 252.54593118336487,
+      "region": "WPR",
+      "income_level": "LM"
+    },
+    {
+      "country": "Sao Tome and Principe",
+      "year": 2020,
+      "actual": 69.0,
+      "predicted": 141.3672165409536,
+      "region": "AFR",
+      "income_level": "LM"
+    },
+    {
+      "country": "Sri Lanka",
+      "year": 2021,
+      "actual": 55.0,
+      "predicted": 126.89288404048231,
+      "region": "SEA",
+      "income_level": "LM"
+    },
+    {
+      "country": "C\u00f4te d'Ivoire",
+      "year": 2023,
+      "actual": 103.0,
+      "predicted": 172.3847660790559,
+      "region": "AFR",
+      "income_level": "LM"
+    },
+    {
+      "country": "Sao Tome and Principe",
+      "year": 2022,
+      "actual": 87.0,
+      "predicted": 156.2157103881969,
+      "region": "AFR",
+      "income_level": "LM"
+    },
+    {
+      "country": "India",
+      "year": 2022,
+      "actual": 196.0,
+      "predicted": 265.12957679672934,
+      "region": "SEA",
+      "income_level": "LM"
+    },
+    {
+      "country": "Kenya",
+      "year": 2023,
+      "actual": 214.0,
+      "predicted": 145.66093585923525,
+      "region": "AFR",
+      "income_level": "LM"
+    },
+    {
+      "country": "Gambia",
+      "year": 2022,
+      "actual": 145.0,
+      "predicted": 76.79079236603606,
+      "region": "AFR",
+      "income_level": "L"
+    },
+    {
+      "country": "Thailand",
+      "year": 2020,
+      "actual": 144.0,
+      "predicted": 76.5132021505775,
+      "region": "SEA",
+      "income_level": "UM"
+    },
+    {
+      "country": "Mauritania",
+      "year": 2019,
+      "actual": 89.0,
+      "predicted": 156.10710018587318,
+      "region": "AFR",
+      "income_level": "LM"
+    },
+    {
+      "country": "Syrian Arab Republic",
+      "year": 2021,
+      "actual": 24.0,
+      "predicted": 90.231211308825,
+      "region": "EMR",
+      "income_level": "L"
+    },
+    {
+      "country": "C\u00f4te d'Ivoire",
+      "year": 2022,
+      "actual": 107.0,
+      "predicted": 172.82512286525804,
+      "region": "AFR",
+      "income_level": "LM"
+    },
+    {
+      "country": "Honduras",
+      "year": 2020,
+      "actual": 38.0,
+      "predicted": 103.01470416143884,
+      "region": "AMR",
+      "income_level": "LM"
+    },
+    {
+      "country": "Burundi",
+      "year": 2021,
+      "actual": 93.0,
+      "predicted": 157.6683677895631,
+      "region": "AFR",
+      "income_level": "L"
+    },
+    {
+      "country": "Sri Lanka",
+      "year": 2019,
+      "actual": 57.0,
+      "predicted": 121.42649587690383,
+      "region": "SEA",
+      "income_level": "LM"
+    },
+    {
+      "country": "Congo",
+      "year": 2019,
+      "actual": 304.0,
+      "predicted": 239.91121196208317,
+      "region": "AFR",
+      "income_level": "LM"
+    },
+    {
+      "country": "Mongolia",
+      "year": 2022,
+      "actual": 440.0,
+      "predicted": 376.8907386595632,
+      "region": "WPR",
+      "income_level": "LM"
+    },
+    {
+      "country": "Myanmar",
+      "year": 2019,
+      "actual": 322.0,
+      "predicted": 259.85296852743767,
+      "region": "SEA",
+      "income_level": "LM"
+    },
+    {
+      "country": "Burundi",
+      "year": 2019,
+      "actual": 102.0,
+      "predicted": 163.75818528431958,
+      "region": "AFR",
+      "income_level": "L"
+    },
+    {
+      "country": "Uganda",
+      "year": 2019,
+      "actual": 200.0,
+      "predicted": 138.8093656983529,
+      "region": "AFR",
+      "income_level": "L"
+    },
+    {
+      "country": "Tajikistan",
+      "year": 2023,
+      "actual": 76.0,
+      "predicted": 136.873404389251,
+      "region": "EUR",
+      "income_level": "LM"
+    },
+    {
+      "country": "Burundi",
+      "year": 2022,
+      "actual": 89.0,
+      "predicted": 149.75889569687098,
+      "region": "AFR",
+      "income_level": "L"
+    },
+    {
+      "country": "Tuvalu",
+      "year": 2019,
+      "actual": 284.0,
+      "predicted": 223.5794076838744,
+      "region": "WPR",
+      "income_level": "UM"
+    },
+    {
+      "country": "Namibia",
+      "year": 2021,
+      "actual": 441.0,
+      "predicted": 501.41865384153647,
+      "region": "AFR",
+      "income_level": "UM"
+    },
+    {
+      "country": "Gambia",
+      "year": 2021,
+      "actual": 149.0,
+      "predicted": 89.01368381955817,
+      "region": "AFR",
+      "income_level": "L"
+    },
+    {
+      "country": "Namibia",
+      "year": 2019,
+      "actual": 486.0,
+      "predicted": 426.01591630011495,
+      "region": "AFR",
+      "income_level": "UM"
+    },
+    {
+      "country": "Timor-Leste",
+      "year": 2019,
+      "actual": 373.0,
+      "predicted": 313.9730003439979,
+      "region": "SEA",
+      "income_level": "LM"
+    },
+    {
+      "country": "Afghanistan",
+      "year": 2019,
+      "actual": 213.0,
+      "predicted": 154.06429659345454,
+      "region": "EMR",
+      "income_level": "L"
+    },
+    {
+      "country": "Ukraine",
+      "year": 2023,
+      "actual": 89.0,
+      "predicted": 30.64994381996996,
+      "region": "EUR",
+      "income_level": "UM"
+    },
+    {
+      "country": "Gabon",
+      "year": 2022,
+      "actual": 390.0,
+      "predicted": 448.22678125165754,
+      "region": "AFR",
+      "income_level": "UM"
+    },
+    {
+      "country": "Botswana",
+      "year": 2019,
+      "actual": 306.0,
+      "predicted": 248.08173537489515,
+      "region": "AFR",
+      "income_level": "UM"
+    },
+    {
+      "country": "Honduras",
+      "year": 2019,
+      "actual": 38.0,
+      "predicted": 94.89530737176078,
+      "region": "AMR",
+      "income_level": "LM"
+    },
+    {
+      "country": "Vanuatu",
+      "year": 2019,
+      "actual": 56.0,
+      "predicted": 112.3450366286526,
+      "region": "WPR",
+      "income_level": "LM"
+    },
+    {
+      "country": "Micronesia (Federated States of)",
+      "year": 2020,
+      "actual": 178.0,
+      "predicted": 234.0485112020941,
+      "region": "WPR",
+      "income_level": "LM"
+    },
+    {
+      "country": "Peru",
+      "year": 2019,
+      "actual": 131.0,
+      "predicted": 75.00993092913176,
+      "region": "AMR",
+      "income_level": "UM"
+    },
+    {
+      "country": "Gabon",
+      "year": 2023,
+      "actual": 380.0,
+      "predicted": 435.38133932525415,
+      "region": "AFR",
+      "income_level": "UM"
+    },
+    {
+      "country": "Honduras",
+      "year": 2023,
+      "actual": 38.0,
+      "predicted": 93.12907393762343,
+      "region": "AMR",
+      "income_level": "LM"
+    },
+    {
+      "country": "Mongolia",
+      "year": 2019,
+      "actual": 428.0,
+      "predicted": 372.9867864928954,
+      "region": "WPR",
+      "income_level": "LM"
+    },
+    {
+      "country": "Uganda",
+      "year": 2022,
+      "actual": 198.0,
+      "predicted": 252.89674203448246,
+      "region": "AFR",
+      "income_level": "L"
+    },
+    {
+      "country": "Eswatini",
+      "year": 2021,
+      "actual": 334.0,
+      "predicted": 279.41408863567455,
+      "region": "AFR",
+      "income_level": "LM"
+    },
+    {
+      "country": "South Africa",
+      "year": 2020,
+      "actual": 562.0,
+      "predicted": 616.5837075109756,
+      "region": "AFR",
+      "income_level": "UM"
+    },
+    {
+      "country": "Morocco",
+      "year": 2023,
+      "actual": 97.0,
+      "predicted": 42.67665284996993,
+      "region": "EMR",
+      "income_level": "LM"
+    },
+    {
+      "country": "Lao People's Democratic Republic",
+      "year": 2021,
+      "actual": 143.0,
+      "predicted": 197.07971249260703,
+      "region": "WPR",
+      "income_level": "LM"
+    },
+    {
+      "country": "Tajikistan",
+      "year": 2022,
+      "actual": 77.0,
+      "predicted": 130.72696673110926,
+      "region": "EUR",
+      "income_level": "LM"
+    },
+    {
+      "country": "Nauru",
+      "year": 2020,
+      "actual": 112.0,
+      "predicted": 58.93752255934768,
+      "region": "WPR",
+      "income_level": "H"
+    },
+    {
+      "country": "Mongolia",
+      "year": 2021,
+      "actual": 421.0,
+      "predicted": 368.5931805985124,
+      "region": "WPR",
+      "income_level": "LM"
+    },
+    {
+      "country": "Pakistan",
+      "year": 2020,
+      "actual": 260.0,
+      "predicted": 312.34603177195504,
+      "region": "EMR",
+      "income_level": "LM"
+    },
+    {
+      "country": "Rwanda",
+      "year": 2022,
+      "actual": 62.0,
+      "predicted": 114.09317640508799,
+      "region": "AFR",
+      "income_level": "L"
+    },
+    {
+      "country": "Mauritania",
+      "year": 2021,
+      "actual": 79.0,
+      "predicted": 129.93188603539755,
+      "region": "AFR",
+      "income_level": "LM"
+    },
+    {
+      "country": "Syrian Arab Republic",
+      "year": 2020,
+      "actual": 20.0,
+      "predicted": 70.72373523114038,
+      "region": "EMR",
+      "income_level": "L"
+    },
+    {
+      "country": "Ghana",
+      "year": 2023,
+      "actual": 129.0,
+      "predicted": 179.57808175874646,
+      "region": "AFR",
+      "income_level": "LM"
+    },
+    {
+      "country": "Botswana",
+      "year": 2023,
+      "actual": 175.0,
+      "predicted": 225.4394538142696,
+      "region": "AFR",
+      "income_level": "UM"
+    },
+    {
+      "country": "Honduras",
+      "year": 2022,
+      "actual": 38.0,
+      "predicted": 88.42332023022183,
+      "region": "AMR",
+      "income_level": "LM"
+    },
+    {
+      "country": "Afghanistan",
+      "year": 2020,
+      "actual": 205.0,
+      "predicted": 154.68544576799792,
+      "region": "EMR",
+      "income_level": "L"
+    },
+    {
+      "country": "Honduras",
+      "year": 2021,
+      "actual": 38.0,
+      "predicted": 88.20184527368117,
+      "region": "AMR",
+      "income_level": "LM"
+    },
+    {
+      "country": "Zimbabwe",
+      "year": 2023,
+      "actual": 209.0,
+      "predicted": 159.25518240754394,
+      "region": "AFR",
+      "income_level": "LM"
+    },
+    {
+      "country": "Togo",
+      "year": 2021,
+      "actual": 47.0,
+      "predicted": 96.54850339643303,
+      "region": "AFR",
+      "income_level": "L"
+    }
+  ]
+}

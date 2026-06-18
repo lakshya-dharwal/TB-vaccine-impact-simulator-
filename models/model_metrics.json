@@ -1,0 +1,28 @@
+{
+  "rf": {
+    "r2": 0.44259502804442796,
+    "mae": 63.14444951117299,
+    "rmse": 115.50682237402371
+  },
+  "lr": {
+    "r2": 0.2396966772607645,
+    "mae": 81.95850386841337,
+    "rmse": 134.90115299287464
+  },
+  "gbm": {
+    "r2": 0.31501279328309717,
+    "mae": 76.78550301626589,
+    "rmse": 128.0452426684017
+  },
+  "rf_best_params": {
+    "n_estimators": 200,
+    "min_samples_leaf": 1,
+    "max_features": "sqrt",
+    "max_depth": 16
+  },
+  "rf_cv_best_score": 0.6474791322800435,
+  "rf_cv_scoring": "r2",
+  "target_transform": "log1p",
+  "train_rows": 2798,
+  "test_rows": 729
+}
